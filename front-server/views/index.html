@@ -1,0 +1,62 @@
+<script>
+var id = null;
+var socket = io.connect('http://localhost:9000');
+socket.on('CONNECTED', function(data)
+{
+	id = data;
+	console.log('나의 아이디 : ', id);
+	
+	for(var i=0; i<id; i++)
+	{
+		$('#canvas').append('<div id="' + i + '" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: blue;"></div>');
+	}
+});
+
+socket.on('USER_CONNECTED', function(data)
+{
+	$('#canvas').append('<div id="' + data + '" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: blue;"></div>');
+});
+
+socket.on('MOVE_CHARACTER', function(data)
+{
+	console.log("왔다 : ", data);
+	$('#' + data.id).css('top', data.y * 50).css('left', data.x * 50);
+});
+
+$(document).ready(function()
+{
+	var character = {x : 0, y : 0};
+	$(window).on('keydown', function(e)
+	{
+		if(e.keyCode == 37)
+		{
+			if(character.x-1 >= 0)
+				character.x--;
+		}
+		else if(e.keyCode == 38)
+		{
+			if(character.y-1 >= 0)
+				character.y--;
+		}
+		else if(e.keyCode == 39)
+		{
+			if(character.x+1 < 20)
+				character.x++;
+		}
+		else if(e.keyCode == 40)
+		{
+			if(character.y+1 < 20)
+				character.y++;
+		}
+		
+		character.id = id;
+		socket.emit('MOVE_CHARACTER', character);
+		
+		$('#character').css('top', character.y * 50).css('left', character.x * 50);
+	});
+});
+</script>
+
+<div id="canvas">
+	<div id="character" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: red;"></div>
+</div>

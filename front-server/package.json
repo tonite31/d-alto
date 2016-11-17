@@ -1,0 +1,14 @@
+{
+  "name": "front-server",
+  "version": "0.0.1",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "body-parser": "*",
+    "connect-redis": "^3.1.0",
+    "express": "*",
+    "express-session": "^1.14.1",
+    "method-override": "*",
+    "redis": "^2.6.2",
+    "socket.io": "^1.5.1"
+  }
+}
