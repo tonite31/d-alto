@@ -1,0 +1,23 @@
+{
+	"server" :
+	{
+		"front-server" :
+		{
+			"port" : 3000
+		},
+		"user-server" : 
+		{
+			"port" : 9000
+		},
+		"character-server" :
+		{
+			"port" : 9001
+		}
+	},
+	
+	"redis" : 
+	{
+		"host" : "localhost",
+		"port" : 6379
+	}
+}

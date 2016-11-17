@@ -3,14 +3,11 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var session = require('express-session');
 
-var path = require('./libs/path');
-path.add('views',__dirname + '/views');
-
-var config = require('../config');
+var config = require('../../config');
 
 var app = global._app = express();
 
-var server = app.listen(config.server['front-server'].port, function()
+var server = app.listen(config.server['user-server'].port, function()
 {
 	console.log('Listening on port %d', server.address().port);
 });
@@ -38,13 +35,9 @@ else
 	app.use(session({ secret: 'd-alto', resave: true, saveUninitialized: true}));
 }
 
-app.use('/views', express.static(path.get('views')));
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(methodOverride());
-
-app.use(require('./libs/renderer'));
 
 app.use(function(err, req, res, next)
 {
@@ -70,19 +63,10 @@ process.on('uncaughtException', function (err)
 	console.error('=================================================\n\n');
 });
 
-app.get('/', function(req, res, next)
-{
-	res.render('index');
-});
 
 
 
-//--------------------------------------------------------
 
 
-
-//var io = require('socket.io')(server);
-//io.on('connection', function(socket)
-//{
-//	console.log('a user connected');
-//});
+var users = require('./routes/users');
+app.post('/login', users.login);
