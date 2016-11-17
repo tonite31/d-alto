@@ -1,8 +1,9 @@
 {
-  "name": "backend-server",
+  "name": "data-server",
   "version": "0.0.1",
   "dependencies": {
     "bluebird": "^3.4.6",
+    "mongodb": "^2.2.11",
     "redis": "^2.6.3",
     "socket.io": "^1.5.1"
   },

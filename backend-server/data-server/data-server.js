@@ -69,4 +69,9 @@ process.on('uncaughtException', function (err)
 
 
 var characters = require('./routes/characters');
-app.post('/characters/:username', characters.create);
+app.post('/characters', characters.create);
+app.put('/characters/skills', characters.bindSkills);
+
+var skills = require('./routes/skills');
+app.post('/skills', skills.create);
+app.get('/skills', skills.getList);
