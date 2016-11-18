@@ -1,37 +1,60 @@
 var assert = require('assert');
+var httpMocks = require('node-mocks-http');
+
 var skills = require('../routes/skills');
-var config = require('../../../config')
+
+var config = require('../../../config');
 
 describe('Skills test', function()
 {
+	var conn = null;
+	before(function(done)
+	{
+		var mongoose = require('mongoose');
+		var db = mongoose.connection;
+		db.on('error', console.error);
+		
+		mongoose.Promise = require('bluebird');
+		 
+		conn = mongoose.connect('mongodb://localhost:27018/test', function()
+		{
+			mongoose.connection.collections.skills.drop(function(err)
+			{
+				done();
+			});
+		});
+	});
+	
+	after(function()
+	{
+		conn.disconnect();
+	});
+	
 	it('Create skill', function()
 	{
-		var httpMocks = require('node-mocks-http');
 		req = httpMocks.createRequest();
 		res = httpMocks.createResponse();
 		
-		req.body.name = "테스트 캐릭터";
-		req.body.skills = [1, 2, 3, 4];
-
-		//db에 넣는 작업
-		skills.create(req, res, null, function()
+		req.body.number = 0;
+		req.body.name = '테스트 스킬';
+		
+		skills.create(req, res, null, function(data)
 		{
-			//db에서 꺼내는 작업.
-			assert.equal(res._getData().name, "테스트 캐릭터");
+			assert.equal(res.statusCode, 200);
+			assert.equal(res._getData().number, 0);
+			assert.equal(res._getData().name, '테스트 스킬');
 		});
 	});
 	
 	it('get skills', function()
 	{
-		var httpMocks = require('node-mocks-http');
 		req = httpMocks.createRequest();
 		res = httpMocks.createResponse();
 		
-		//db에 넣는 작업
-		skills.create(req, res, null, function()
+		skills.getSkills(req, res, null, function(data)
 		{
-			//db에서 꺼내는 작업.
-			assert.equal(res._getData().name, "테스트 캐릭터");
+			assert.equal(res.statusCode, 200);
+			assert(res._getData() instanceof Array);
 		});
 	});
 });

@@ -65,6 +65,18 @@ process.on('uncaughtException', function (err)
 
 
 
+var mongoose = require('mongoose');
+var db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', function(){
+    // CONNECTED TO MONGODB SERVER
+    console.log("Connected to mongod server");
+});
+
+mongoose.Promise = require('bluebird');
+ 
+mongoose.connect('mongodb://localhost/data-server');
+
 
 
 
@@ -74,4 +86,4 @@ app.put('/characters/skills', characters.bindSkills);
 
 var skills = require('./routes/skills');
 app.post('/skills', skills.create);
-app.get('/skills', skills.getList);
+app.get('/skills', skills.getSkills);

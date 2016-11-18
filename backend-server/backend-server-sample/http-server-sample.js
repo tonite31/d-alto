@@ -7,7 +7,7 @@ var config = require('../../config');
 
 var app = global._app = express();
 
-var server = app.listen(config.server['user-server'].port, function()
+var server = app.listen(config.server['sample-server'].port, function()
 {
 	console.log('Listening on port %d', server.address().port);
 });
@@ -62,22 +62,3 @@ process.on('uncaughtException', function (err)
 	console.error(err.stack);
 	console.error('=================================================\n\n');
 });
-
-
-var mongoose = require('mongoose');
-var db = mongoose.connection;
-db.on('error', console.error);
-db.once('open', function(){
-    // CONNECTED TO MONGODB SERVER
-    console.log("Connected to mongod server");
-});
-
-mongoose.Promise = require('bluebird');
- 
-mongoose.connect('mongodb://localhost/user-server');
-
-
-
-var users = require('./routes/users');
-app.post('/login', users.login);
-app.post('/users', users.create);

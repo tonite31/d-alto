@@ -1,22 +1,37 @@
+var UserSchema = require('../schema/user');
 
-var users = [];
 
 exports.login = function(req, res, next, callback)
 {
-	var client = req.redis;
-	users.push({username : req.body.username});
-	client.set('users', JSON.stringify(users), function(error, data)
+	UserSchema.findOne({username : req.body.username, password : req.body.password}).exec(function(err, data)
 	{
-		if(error)
+		if(err)
 		{
-			res.status(500).end(error);
+			console.error(err);
 		}
 		else
 		{
-			res.status(200).end(data);
+			res.status(200).end(data.username);
+			if(callback)
+				callback();
 		}
-		
-		if(callback)
-			callback();
+	});
+};
+
+exports.create = function(req, res, next, callback)
+{
+	var user = new UserSchema(req.body);
+	user.save(function(err, data)
+	{
+		if(err)
+		{
+			console.error(err);
+		}
+		else
+		{
+			res.status(201).send(data);
+			if(callback)
+				callback();
+		}
 	});
 };

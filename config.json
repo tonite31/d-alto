@@ -12,6 +12,10 @@
 		"character-server" :
 		{
 			"port" : 9001
+		},
+		"chat-server" :
+		{
+			"port" : 9002
 		}
 	},
 	
