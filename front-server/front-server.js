@@ -75,6 +75,11 @@ app.get('/', function(req, res, next)
 	res.render('index');
 });
 
+app.get('/:page', function(req, res, next)
+{
+	res.render(req.params.page);
+});
+
 
 
 //--------------------------------------------------------

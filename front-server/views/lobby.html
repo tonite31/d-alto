@@ -1,0 +1,37 @@
+<script src="http://localhost:9003/socket.io/socket.io.js"></script>
+
+<script>
+var id = null;
+var socket = io.connect('http://localhost:9003');
+socket.on('connect', function()
+{
+    socket.emit('joinRoom','test_room');
+});
+
+socket.on('RECEIVE_MSG', function(msg)
+{
+	console.log("메시지 : ", msg);	
+});
+
+
+$(document).ready(function()
+{
+	$('#msg').on('keydown', function(e)
+	{
+		if(e.keyCode == 13)
+		{
+			socket.emit('SEND_MSG', $(this).val());
+			e.preventDefault();
+			
+			$(this).val('');
+		}
+	});
+	
+	$.ajax({url : 'http://localhost:9003/users', success : function(data)
+	{
+		console.log('data');
+	}});
+});
+</script>
+
+<input type="text" id="msg">

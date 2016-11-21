@@ -16,6 +16,14 @@
 		"chat-server" :
 		{
 			"port" : 9002
+		},
+		"lobby-server" :
+		{
+			"port" : 9003
+		},
+		"battle-server" :
+		{
+			"port" : 9004
 		}
 	},
 	
