@@ -1,0 +1,19 @@
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+var id = null;
+var socket = io.connect();
+socket.on('connect', function()
+{
+    socket.emit('joinRoom','test_room');
+});
+
+socket.on('RECEIVE_MSG', function(msg)
+{
+	console.log("메시지 : ", msg);	
+});
+</script>
+
+<div id="map">
+여기가 맵이여
+</div>

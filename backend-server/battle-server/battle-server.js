@@ -66,67 +66,22 @@ process.on('uncaughtException', function (err)
 
 
 
-
+var battleRouter = require('./routes/battleRoute');
+app.get('/clearBattleRoom', battleRouter.clearBattleRoom);
+app.get('/checkUserInTheRoom', battleRouter.checkUserInTheRoom);
+app.post('/joinBattleRoom', battleRouter.joinBattleRoom);
+app.post('/getControlId', battleRouter.getControlId);
+app.get('/getCharacterPosition', battleRouter.getCharacterPosition);
 
 
 //----------------------------------------------------------------
-
-var battleList = {};
+var battle = require('./module/battle');
 
 var socket = io.listen(server);
 socket.on('connection', function(client)
 {
-	client.on('USER_CONNECTED', function(data)
+	client.on('SET_INIT_POSITION_MY_CHARACTER', function(character)
 	{
-		if(userList[data.characterName] == data.key)
-		{
-			userList[data.characterName] = client;
-			client.characterName = data.characterName;
-		}
+		battle.setInitPositionOfCharacter
 	});
-	
-	var roomId = null;
-    client.on('SEND_MSG', function(data)
-    { 
-    	socket.to(roomId).emit('RECEIVE_MSG', data);
-    });
-    
-    client.on('START_BATTLE', function()
-    {
-    	client.to(roomId).emit('START_BATTLE', {name : client.characterName});
-    });
-    
-    client.on('joinRoom',function(data)
-    {
-        roomId = data;
-        client.join(roomId);
-    });
-    
-    client.on('leaveRoom',function()
-    {
-    	client.leave(roomId);
-    	delete userList[client.characterName];
-    	
-    	var keys = [];
-    	for(var key in userList)
-    	{
-    		keys.push(key);
-    	}
-    	
-    	socket.to(roomId).emit('REFRESH_USER_LIST', keys);
-    });
-    
-    client.on('disconnect', function()
-    {
-    	client.leave(roomId);
-    	delete userList[client.characterName];
-    	
-    	var keys = [];
-    	for(var key in userList)
-    	{
-    		keys.push(key);
-    	}
-    	
-    	socket.to(roomId).emit('REFRESH_USER_LIST', keys);
-    });
 });

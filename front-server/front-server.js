@@ -15,6 +15,8 @@ var server = app.listen(config.server['front-server'].port, function()
 	console.log('Listening on port %d', server.address().port);
 });
 
+var sessionMiddleware = null;
+
 if(config.redis && config.redis.host && config.redis.port)
 {
 	var RedisStore = require('connect-redis')(session);
@@ -26,7 +28,7 @@ if(config.redis && config.redis.host && config.redis.port)
 		console.log('connected to redis!!');
 	});
 	
-	app.use(session({
+	app.use(sessionMiddleware = session({
 	    store: new RedisStore({client: client}),
 	    secret: 'd-alto',
 	    saveUninitialized: true,
@@ -35,7 +37,7 @@ if(config.redis && config.redis.host && config.redis.port)
 }
 else
 {
-	app.use(session({ secret: 'd-alto', resave: true, saveUninitialized: true}));
+	app.use(sessionMiddleware = session({ secret: 'd-alto', resave: true, saveUninitialized: true}));
 }
 
 app.use('/views', express.static(path.get('views')));
@@ -45,6 +47,14 @@ app.use(bodyParser.json());
 app.use(methodOverride());
 
 app.use(require('./libs/renderer'));
+
+app.use(function(req, res, next)
+{
+	if(!req.session)
+		req.session = {};
+	
+	next();
+});
 
 app.use(function(err, req, res, next)
 {
@@ -70,24 +80,54 @@ process.on('uncaughtException', function (err)
 	console.error('=================================================\n\n');
 });
 
+var index = require('./routes/index');
+
 app.get('/', function(req, res, next)
 {
 	res.render('index');
 });
 
-app.get('/:page', function(req, res, next)
+app.get('/battle/:roomId', function(req, res, next)
 {
-	res.render(req.params.page);
+	index.checkUserInTheRoom(req, function(statusCode, result)
+	{
+		if(statusCode == 200 && result == 'true')
+		{
+			//startBattle
+			index.getControlId(req, function(statusCode, controlId)
+			{
+				if(statusCode == 200)
+				{
+					req.session.battle = {controlId : controlId};
+					res.render('battle');
+				}
+				else
+				{
+					res.status(500).end(result);
+				}
+			});
+		}
+		else
+		{
+			res.status(401).end('not authorized');
+		}
+	});
 });
-
+app.get('/api/getRandomCharacter', index.getRandomCharacter);
+app.post('/api/joinBattleRoom', index.joinBattleRoom);
 
 
 //--------------------------------------------------------
 
 
 
-//var io = require('socket.io')(server);
-//io.on('connection', function(socket)
-//{
-//	console.log('a user connected');
-//});
+var io = require('socket.io')(server);
+io.use(function(socket, next)
+{
+	sessionMiddleware(socket.request, socket.request.res, next);
+});
+
+io.on('connection', function(socket)
+{
+	console.log('a user connected : ', socket.request.session.battle);
+});

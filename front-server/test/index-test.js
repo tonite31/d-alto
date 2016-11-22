@@ -12,6 +12,8 @@ describe('Character test', function()
 		var req = httpMocks.createRequest();
 		var res = httpMocks.createResponse();
 		
+		req.session = {};
+		
 		index.getRandomCharacter(req, res, null, function()
 		{
 			var data = res._getData();
@@ -22,21 +24,91 @@ describe('Character test', function()
 			done();
 		});
 	});
-	
+
 	it('joinBattleRoom', function(done)
 	{
 		var req = httpMocks.createRequest();
 		var res = httpMocks.createResponse();
 		
 		req.session = {};
-		req.session.character = {hp : 100, mp : 100, name : 'tester'};
+		req.session.character = {hp : 100, mp : 100};
+		req.body.name = 'tester';
 		
-		index.joinBattleRoom(req, res, null, function()
+		index.clearBattleRoom(req, res, null, function()
 		{
-			var data = res._getData();
-			assert.equal(res.statusCode, 200);
-			assert.equal(data.roomId, 1);
-			done();
+			index.joinBattleRoom(req, res, null, function()
+			{
+				var data = res._getData();
+				assert.equal(res.statusCode, 200);
+				assert.equal(data.roomId, "room");
+				done();
+			});
+		});
+	});
+	
+	it('isThisSessionInTheRoom', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		index.clearBattleRoom(req, res, null, function()
+		{
+			req = httpMocks.createRequest();
+			res = httpMocks.createResponse();
+			
+			req.session = {};
+			req.session.character = {hp : 100, mp : 100};
+			req.body.name = 'tester';
+			
+			index.joinBattleRoom(req, res, null, function()
+			{
+				req = httpMocks.createRequest();
+				res = httpMocks.createResponse();
+				
+				req.session = {};
+				req.session.character = {hp : 100, mp : 100, name : 'tester'};
+				req.params.roomId = "room";
+				
+				index.checkUserInTheRoom(req, function(statusCode, result)
+				{
+					assert.equal(200, statusCode);
+					assert.equal(result, "true");
+					done();
+				});
+			});
+		});
+	});
+	
+	it('startBattle', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		index.clearBattleRoom(req, res, null, function()
+		{
+			req = httpMocks.createRequest();
+			res = httpMocks.createResponse();
+			
+			req.session = {};
+			req.session.character = {hp : 100, mp : 100};
+			req.body.name = 'tester';
+			
+			index.joinBattleRoom(req, res, null, function()
+			{
+				req = httpMocks.createRequest();
+				res = httpMocks.createResponse();
+				
+				req.session = {};
+				req.session.character = {hp : 100, mp : 100, name : 'tester'};
+				req.params.roomId = "room";
+				
+				index.getControlId(req, function(statusCode, controlId)
+				{
+					assert.equal(200, statusCode);
+					assert(controlId);
+					done();
+				});
+			});
 		});
 	});
 });

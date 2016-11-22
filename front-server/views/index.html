@@ -1,7 +1,7 @@
 <script>
 var setCharacterInfo = function(callback)
 {
-	$.ajax({url : 'http://localhost:9001/getRandomCharacter'}).done(function(data)
+	$.ajax({url : '/api/getRandomCharacter', type : 'get'}).done(function(data)
 	{
 		$('#createCharacterForm').get(0).hp.value = data.hp;
 		$('#createCharacterForm').get(0).mp.value = data.mp;
@@ -20,7 +20,10 @@ $(document).ready(function()
 	{
 		formSubmit('#createCharacterForm', function(data)
 		{
-			console.log("데이터 : ", data);
+			$.ajax({url : '/api/joinBattleRoom', type : 'post'}).done(function(data)
+			{
+				location.href = '/battle/' + data.roomId;
+			});
 		});
 		
 		$('#refresh').on('click', function()
