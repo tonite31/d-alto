@@ -10,5 +10,8 @@
     "method-override": "*",
     "redis": "^2.6.2",
     "socket.io": "^1.5.1"
+  },
+  "devDependencies": {
+    "node-mocks-http": "^1.5.4"
   }
 }

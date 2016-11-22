@@ -7,7 +7,7 @@ var config = require('../../config');
 
 var app = global._app = express();
 
-var server = app.listen(config.server['character-server'].port, function()
+var server = app.listen(config.server['data-server'].port, function()
 {
 	console.log('Listening on port %d', server.address().port);
 });
@@ -65,25 +65,40 @@ process.on('uncaughtException', function (err)
 
 
 
-var mongoose = require('mongoose');
-var db = mongoose.connection;
-db.on('error', console.error);
-db.once('open', function(){
-    // CONNECTED TO MONGODB SERVER
-    console.log("Connected to mongod server");
-});
+//var mongoose = require('mongoose');
+//var db = mongoose.connection;
+//db.on('error', console.error);
+//db.once('open', function(){
+//    // CONNECTED TO MONGODB SERVER
+//    console.log("Connected to mongod server");
+//});
+//
+//mongoose.Promise = require('bluebird');
+// 
+//mongoose.connect('mongodb://localhost/data-server');
 
-mongoose.Promise = require('bluebird');
- 
-mongoose.connect('mongodb://localhost/data-server');
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+    next();
+}
+
+app.use(allowCrossDomain);
 
 
 
 
 var characters = require('./routes/characters');
-app.post('/characters', characters.create);
-app.put('/characters/skills', characters.bindSkills);
+app.get('/getRandomCharacter', characters.getRandomCharacter);
+app.get('/', function(req, res, next, callback)
+{
+	console.log("흠");
+});
+//app.post('/characters', characters.create);
+//app.put('/characters/skills', characters.bindSkills);
 
-var skills = require('./routes/skills');
-app.post('/skills', skills.create);
-app.get('/skills', skills.getSkills);
+//var skills = require('./routes/skills');
+//app.post('/skills', skills.create);
+//app.get('/skills', skills.getSkills);

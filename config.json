@@ -9,7 +9,7 @@
 		{
 			"port" : 9000
 		},
-		"character-server" :
+		"data-server" :
 		{
 			"port" : 9001
 		},

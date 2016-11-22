@@ -1,62 +1,55 @@
 <script>
-var id = null;
-var socket = io.connect('http://localhost:9000');
-socket.on('CONNECTED', function(data)
+var setCharacterInfo = function(callback)
 {
-	id = data;
-	console.log('나의 아이디 : ', id);
-	
-	for(var i=0; i<id; i++)
+	$.ajax({url : 'http://localhost:9001/getRandomCharacter'}).done(function(data)
 	{
-		$('#canvas').append('<div id="' + i + '" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: blue;"></div>');
-	}
-});
-
-socket.on('USER_CONNECTED', function(data)
-{
-	$('#canvas').append('<div id="' + data + '" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: blue;"></div>');
-});
-
-socket.on('MOVE_CHARACTER', function(data)
-{
-	console.log("왔다 : ", data);
-	$('#' + data.id).css('top', data.y * 50).css('left', data.x * 50);
-});
+		$('#createCharacterForm').get(0).hp.value = data.hp;
+		$('#createCharacterForm').get(0).mp.value = data.mp;
+		
+		if(callback)
+			callback();
+	}).fail(function(error)
+	{
+		$('#error').text(JSON.stringify(error));
+	});
+};
 
 $(document).ready(function()
 {
-	var character = {x : 0, y : 0};
-	$(window).on('keydown', function(e)
+	setCharacterInfo(function()
 	{
-		if(e.keyCode == 37)
+		formSubmit('#createCharacterForm', function(data)
 		{
-			if(character.x-1 >= 0)
-				character.x--;
-		}
-		else if(e.keyCode == 38)
-		{
-			if(character.y-1 >= 0)
-				character.y--;
-		}
-		else if(e.keyCode == 39)
-		{
-			if(character.x+1 < 20)
-				character.x++;
-		}
-		else if(e.keyCode == 40)
-		{
-			if(character.y+1 < 20)
-				character.y++;
-		}
+			console.log("데이터 : ", data);
+		});
 		
-		character.id = id;
-		socket.emit('MOVE_CHARACTER', character);
-		
-		$('#character').css('top', character.y * 50).css('left', character.x * 50);
+		$('#refresh').on('click', function()
+		{
+			setCharacterInfo();
+		});
 	});
 });
 </script>
 
-<div id="canvas">
-	<div id="character" style="position: absolute; top:0; left:0; width: 50px; height: 50px; background-color: red;"></div>
+<div class="background">
+	<form id="createCharacterForm">
+		<div>
+			<label>HP</label>
+			<input type="text" name="hp" readonly>
+		</div>
+		<div>
+			<label>MP</label>
+			<input type="text" name="mp" readonly>
+		</div>
+		<div>
+			<button type="button" id="refresh">새로고침</button>
+		</div>
+		<div>
+			<input type="text" name="name" placeholder="이름">
+		</div>
+		<div>
+			<input type="submit" value="접속">
+		</div>
+	</form>
+	<div id="error"></div>
 </div>
