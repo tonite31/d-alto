@@ -73,6 +73,8 @@ var battleData = {};
 				}
 			}
 		}
+		
+		return null;
 	};
 	
 	this.getCharacterPosition = function(roomId, controlId)
@@ -103,7 +105,7 @@ var battleData = {};
 		}
 	};
 	
-	this.moveCharacter = function(roomId, controlId, position)
+	this.moveCharacter = function(roomId, controlId, direction)
 	{
 		if(!rooms[roomId])
 			return null;
@@ -112,10 +114,36 @@ var battleData = {};
 		if(!character)
 			return null;
 		
-		character.position = position;
-		rooms[roomId].map[position.y][position.x] = character;
+		var originPosition = character.position;
 		
-		return true;
+		switch(direction)
+		{
+			case 'n' :
+				character.position.y -= character.moveSpeed;
+				break;
+			case 'e' :
+				character.position.x += character.moveSpeed;
+				break;
+			case 's' :
+				character.position.y += character.moveSpeed;
+				break;
+			case 'w' :
+				character.position.x -= character.moveSpeed;
+				break;
+		};
+		
+		//이동가능한지 체크
+		var target = rooms[roomId].map[character.position.y][character.position.x];
+		if(!target || target.type == 'user')
+		{
+			rooms[roomId].map[character.position.y][character.position.x] = character;
+			rooms[roomId].map[originPosition.y][originPosition.x] = 0;
+			return character.position;
+		}
+		else
+		{
+			return false;
+		}
 	};
 	
 	this.moveCharacterForce = function(roomId, targetPosition, position)

@@ -80,8 +80,39 @@ var battle = require('./module/battle');
 var socket = io.listen(server);
 socket.on('connection', function(client)
 {
-	client.on('SET_INIT_POSITION_MY_CHARACTER', function(character)
+	client.on('INIT_CHARACTER_POSITION', function(data)
 	{
-		battle.setInitPositionOfCharacter
+		var roomId = data.roomId;
+		var controlId = data.controlId;
+		var position = battle.setInitPositionOfCharacter(roomId, controlId);
+		if(!position)
+		{
+			client.emit('INIT_CHARACTER_POSITION', null);
+		}
+		else
+		{
+			client.emit('INIT_CHARACTER_POSITION', position);
+		}
+	});
+	
+	client.on('MOVE_CHARACTER_POSITION', function(data)
+	{
+		var roomId = data.roomId;
+		var controlId = data.controlId;
+		var direction = data.direction;
+		
+		var result = battle.moveCharacter(roomId, controlId, direction);
+		if(result == null)
+		{
+			client.emit('MOVE_CHARACTER_POSITION', null);
+		}
+		else if(result == false)
+		{
+			client.emit('MOVE_CHARACTER_POSITION', false);
+		}
+		else
+		{
+			socket.emit('MOVE_CHARACTER_POSITION', result);
+		}
 	});
 });

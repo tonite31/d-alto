@@ -160,7 +160,7 @@ describe('Battle test', function()
 			var res = httpMocks.createResponse();
 			
 			req.body.roomId = roomId;
-			req.body.character = {hp : 100, mp : 100, attackRange : 1, attackPoint : 10, name : 'tester', skills : [1]};
+			req.body.character = {hp : 100, mp : 100, attackRange : 1, attackPoint : 10, moveSpeed : 1, name : 'tester', skills : [1]};
 			battleRoute.joinBattleRoom(req, res, null, function()
 			{
 				req = httpMocks.createRequest();
@@ -180,36 +180,37 @@ describe('Battle test', function()
 		
 		it('Move character', function()
 		{
-			battle.moveCharacter(roomId, controlId, {x : 5, y : 3});
+			battle.moveCharacter(roomId, controlId, 'e');
 			var result = battle.getCharacterPosition(roomId, controlId);
 			
-			assert.equal(result.x, 5);
-			assert.equal(result.y, 3);
+			assert.equal(result.x, 1);
+			assert.equal(result.y, 0);
 		});
 		
 		it('Cast skill 1', function(done)
 		{
 			var target = {hp : 100, mp : 100, name : 'monster'};
-			target.position = {x : 5, y : 9};
+			target.position = {x : 1, y : 1};
 			battle.createCharacter(roomId, target);
 			
-			battle.moveCharacter(roomId, controlId, {x : 5, y : 8});
-			
 			var skillId = 1;
-			battle.moveCharacter(roomId, controlId, {x : 5, y : 10});
+			battle.moveCharacter(roomId, controlId, 'e');
+			battle.moveCharacter(roomId, controlId, 'e');
+			battle.moveCharacter(roomId, controlId, 's');
 			battle.castSkill(roomId, controlId, target, skillId, function(result)
 			{
 				assert(result, true);
 				
-				battle.moveCharacter(roomId, controlId, {x : 6, y : 9});
+				battle.moveCharacter(roomId, controlId, 's');
+				battle.moveCharacter(roomId, controlId, 'w');
 				battle.castSkill(roomId, controlId, target, skillId, function(result)
 				{
-					assert(result, true);
+					assert(result, false);
 					
 					done();
 				});
 				
-				assert(battle.moveCharacterForce(roomId, target.position, {x : 7, y : 8}), true);
+				assert(battle.moveCharacterForce(roomId, target.position, {x : 2, y : 1}), true);
 			});
 		});
 	});

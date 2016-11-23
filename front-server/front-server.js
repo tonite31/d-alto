@@ -82,6 +82,8 @@ process.on('uncaughtException', function (err)
 
 var index = require('./routes/index');
 
+var battleSession = {};
+
 app.get('/', function(req, res, next)
 {
 	res.render('index');
@@ -98,8 +100,19 @@ app.get('/battle/:roomId', function(req, res, next)
 			{
 				if(statusCode == 200)
 				{
-					req.session.battle = {controlId : controlId};
-					res.render('battle');
+					var socket = require('socket.io-client')('http://localhost:' + config.server['battle-server'].port);
+					socket.on('connect', function()
+					{
+						battleSession[controlId] = socket;
+						req.session.battle = {roomId : "room", controlId : controlId};
+						res.render('battle');
+					});
+					
+					socket.on('disconnect', function()
+					{
+						req.session.battle = null;
+						res.status(401).end();
+					});
 				}
 				else
 				{
@@ -113,12 +126,12 @@ app.get('/battle/:roomId', function(req, res, next)
 		}
 	});
 });
+
 app.get('/api/getRandomCharacter', index.getRandomCharacter);
 app.post('/api/joinBattleRoom', index.joinBattleRoom);
 
 
 //--------------------------------------------------------
-
 
 
 var io = require('socket.io')(server);
@@ -129,5 +142,10 @@ io.use(function(socket, next)
 
 io.on('connection', function(socket)
 {
-	console.log('a user connected : ', socket.request.session.battle);
+	var battleData = socket.request.session.battle;
+	battleSession[battleData.controlId].emit('INIT_CHARACTER_POSITION', battleData);
+	battleSession[battleData.controlId].on('INIT_CHARACTER_POSITION', function(result
+	{
+		
+	});
 });
