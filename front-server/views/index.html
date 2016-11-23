@@ -1,58 +1,68 @@
 <script>
-var setCharacterInfo = function(callback)
+var login = function(data)
 {
-	$.ajax({url : '/api/getRandomCharacter', type : 'get'}).done(function(data)
+	$.ajax({url : '/login', type : 'post', data : data}).done(function(data)
 	{
-		$('#createCharacterForm').get(0).hp.value = data.hp;
-		$('#createCharacterForm').get(0).mp.value = data.mp;
-		
-		if(callback)
-			callback();
+		if(data == 'login_success')
+		{
+			location.href = "/select_character";
+		}
+		else if(data == 'password_disaccord')
+		{
+			$('#loginForm input:last').val('비밀번호가 일치하지 않습니다.');
+		}
 	}).fail(function(error)
 	{
-		$('#error').text(JSON.stringify(error));
+		console.log(error);
+		if(error.status == 404)
+		{
+			$('<div> <label>비밀번호 확인</label> <input type="password" name="passwordConfirm"> </div>').insertBefore('#loginForm div:last');
+			$('<p style="color: red; font-size:12px;">등록된 사용자가 없습니다. 등록하세요.</p>').insertAfter('#loginForm input:last');
+			$('#loginForm input:last').val('등록');
+		}
 	});
 };
-
 $(document).ready(function()
 {
-	setCharacterInfo(function()
+	formSubmit('#loginForm', function(data)
 	{
-		formSubmit('#createCharacterForm', function(data)
+		if(data.passwordConfirm)
 		{
-			$.ajax({url : '/api/joinBattleRoom', type : 'post', data : data}).done(function(data)
+			if(data.password == data.passwordConfirm)
 			{
-				location.href = '/battle/' + data.roomId;
-			});
-		});
-		
-		$('#refresh').on('click', function()
+				$.ajax({url : '/users', type : 'post', data : data}).done(function()
+				{
+					login(data);
+				}).fail(function(error)
+				{
+					$('#loginForm p').text(error);
+				});
+			}
+			else
+			{
+				$('#loginForm p').text('비밀번호가 일치하지 않습니다');
+			}
+		}
+		else
 		{
-			setCharacterInfo();
-		});
+			login(data);
+		}
 	});
 });
 </script>
 
-<div class="background">
-	<form id="createCharacterForm">
+<div>
+	<form id="loginForm">
 		<div>
-			<label>HP</label>
-			<input type="text" name="hp" readonly>
+			<label>아이디</label>
+			<input type="text" name="username">
 		</div>
 		<div>
-			<label>MP</label>
-			<input type="text" name="mp" readonly>
+			<label>비밀번호</label>
+			<input type="password" name="password">
 		</div>
 		<div>
-			<button type="button" id="refresh">새로고침</button>
-		</div>
-		<div>
-			<input type="text" name="name" placeholder="이름">
-		</div>
-		<div>
-			<input type="submit" value="접속">
+			<input type="submit" value="로그인">
 		</div>
 	</form>
-	<div id="error"></div>
 </div>

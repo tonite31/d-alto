@@ -1,0 +1,81 @@
+<script>
+var setCharacterInfo = function(callback)
+{
+	$.ajax({url : '/api/getRandomCharacter', type : 'get'}).done(function(data)
+	{
+		$('#createCharacterForm').get(0).hp.value = data.hp;
+		$('#createCharacterForm').get(0).mp.value = data.mp;
+		
+		if(callback)
+			callback();
+	}).fail(function(error)
+	{
+		$('#error').text(JSON.stringify(error));
+	});
+};
+
+$(document).ready(function()
+{
+	$.ajax({url : '/api/getRandomCharacterStat'}).done(function(data)
+	{
+		data = JSON.parse(data);
+		var form = $('#createCharacterForm').get(0);
+
+		for(var key in data)
+		{
+			form[key].value = data[key];
+		}
+	}).fail(function(error)
+	{
+		alert(error);	
+	});
+	
+	formSubmit('#createCharacterForm', function(data)
+	{
+		$.ajax({url : '/api/createCharacter', type : 'post', data : data}).done(function(data)
+		{
+			location.href = '/select_character';
+		}).fail(function(error)
+		{
+			alert(error);	
+		});
+	});
+});
+</script>
+
+<div>
+	<h1>캐릭터 생성</h1>
+	<p>기본 스탯은 랜덤이다.</p>
+	<form id="createCharacterForm">
+		<div>
+			<label>체력</label>
+			<input type="text" name="hp" readonly>
+		</div>
+		<div>
+			<label>마나</label>
+			<input type="text" name="mp" readonly>
+		</div>
+		<div>
+			<label>공격력</label>
+			<input type="text" name="attackPoint" readonly>
+		</div>
+		<div>
+			<label>공격범위</label>
+			<input type="text" name="attackRange" readonly>
+		</div>
+		<div>
+			<label>이동속도</label>
+			<input type="text" name="moveSpeed" readonly>
+		</div>
+		<div>
+			<button type="button" id="refresh">스탯 새로고침</button>
+		</div>
+		<div>
+			<input type="text" name="characterName" placeholder="이름" required>
+		</div>
+		<div>
+			<input type="submit" value="생성">
+		</div>
+	</form>
+	<div id="error"></div>
+</div>

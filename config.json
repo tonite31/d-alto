@@ -3,6 +3,7 @@
 	{
 		"front-server" :
 		{
+			"host" : "localhost",
 			"port" : 3000
 		},
 		"user-server" : 
@@ -11,6 +12,7 @@
 		},
 		"data-server" :
 		{
+			"host" : "localhost",
 			"port" : 9001
 		},
 		"chat-server" :
@@ -23,6 +25,7 @@
 		},
 		"battle-server" :
 		{
+			"host" : "localhost",
 			"port" : 9004
 		}
 	},

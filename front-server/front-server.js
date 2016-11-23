@@ -80,102 +80,119 @@ process.on('uncaughtException', function (err)
 	console.error('=================================================\n\n');
 });
 
-var index = require('./routes/index');
-
-var battleSession = {};
-
-app.get('/', function(req, res, next)
+var mongoose = require('mongoose');
+var db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', function()
 {
-	res.render('index');
+	console.log("Connected to mongod server");
 });
 
-app.get('/battle/:roomId', function(req, res, next)
-{
-	index.checkUserInTheRoom(req, function(statusCode, result)
-	{
-		if(statusCode == 200 && result == 'true')
-		{
-			//startBattle
-			index.getControlId(req, function(statusCode, controlId)
-			{
-				if(statusCode == 200)
-				{
-					var socket = require('socket.io-client')('http://localhost:' + config.server['battle-server'].port);
-					socket.on('connect', function()
-					{
-						battleSession[controlId] = socket;
-						req.session.battle = {roomId : "room", controlId : controlId};
-						res.render('battle');
-					});
-					
-					socket.on('disconnect', function()
-					{
-						req.session.battle = null;
-						res.status(401).end();
-					});
-				}
-				else
-				{
-					res.status(500).end(result);
-				}
-			});
-		}
-		else
-		{
-			res.status(401).end('not authorized');
-		}
-	});
-});
+mongoose.Promise = require('bluebird');
 
-app.get('/api/getRandomCharacter', index.getRandomCharacter);
-app.post('/api/joinBattleRoom', index.joinBattleRoom);
+mongoose.connect('mongodb://localhost/front-server');
+
+require('./routers/indexRouter')(app);
+require('./routers/userRouter')(app);
+require('./routers/characterRouter')(app);
 
 
-//--------------------------------------------------------
-
-
-var io = require('socket.io')(server);
-io.use(function(socket, next)
-{
-	sessionMiddleware(socket.request, socket.request.res, next);
-});
-
-io.on('connection', function(client)
-{
-	var battleData = client.request.session.battle;
-	if(battleData)
-	{
-		var battleClient = battleSession[battleData.controlId];
-		
-		battleClient.emit('GET_MAP_DATA', battleData.roomId);
-		battleClient.on('GET_MAP_DATA', function(result)
-		{
-			client.emit('GET_MAP_DATA', result);
-		});
-		
-		battleClient.emit('INIT_CHARACTER_POSITION', battleData);
-		battleClient.on('INIT_CHARACTER_POSITION', function(result)
-		{
-			if(typeof result == 'object')
-			{
-				client.request.session.character.position = result;
-				client.emit('INIT_CHARACTER_POSITION', client.request.session.character);
-			}
-			else if(result != false)
-			{
-				client.emit('INIT_CHARACTER_POSITION', null);
-			}
-		});
-		
-		battleClient.on('MOVE_CHARACTER', function(result)
-		{
-			result.name = client.request.session.character.name;
-			client.emit('MOVE_CHARACTER', result);
-		});
-		
-		client.on('MOVE_CHARACTER', function(data)
-		{
-			battleClient.emit('MOVE_CHARACTER', {roomId : battleData.roomId, controlId : battleData.controlId, direction : data});
-		});
-	}
-});
+//var index = require('./routes/index');
+//
+//var battleSession = {};
+//
+//app.get('/', function(req, res, next)
+//{
+//	res.render('index');
+//});
+//
+//app.get('/battle/:roomId', function(req, res, next)
+//{
+//	index.checkUserInTheRoom(req, function(statusCode, result)
+//	{
+//		if(statusCode == 200 && result == 'true')
+//		{
+//			//startBattle
+//			index.getControlId(req, function(statusCode, controlId)
+//			{
+//				if(statusCode == 200)
+//				{
+//					var socket = require('socket.io-client')('http://localhost:' + config.server['battle-server'].port);
+//					socket.on('connect', function()
+//					{
+//						battleSession[controlId] = socket;
+//						req.session.battle = {roomId : "room", controlId : controlId};
+//						res.render('battle');
+//					});
+//					
+//					socket.on('disconnect', function()
+//					{
+//						req.session.battle = null;
+//						res.status(401).end();
+//					});
+//				}
+//				else
+//				{
+//					res.status(500).end(result);
+//				}
+//			});
+//		}
+//		else
+//		{
+//			res.status(401).end('not authorized');
+//		}
+//	});
+//});
+//
+//app.get('/api/getRandomCharacter', index.getRandomCharacter);
+//app.post('/api/joinBattleRoom', index.joinBattleRoom);
+//
+//
+////--------------------------------------------------------
+//
+//
+//var io = require('socket.io')(server);
+//io.use(function(socket, next)
+//{
+//	sessionMiddleware(socket.request, socket.request.res, next);
+//});
+//
+//io.on('connection', function(client)
+//{
+//	var battleData = client.request.session.battle;
+//	if(battleData)
+//	{
+//		var battleClient = battleSession[battleData.controlId];
+//		
+//		battleClient.emit('GET_MAP_DATA', battleData.roomId);
+//		battleClient.on('GET_MAP_DATA', function(result)
+//		{
+//			client.emit('GET_MAP_DATA', result);
+//		});
+//		
+//		battleClient.emit('INIT_CHARACTER_POSITION', battleData);
+//		battleClient.on('INIT_CHARACTER_POSITION', function(result)
+//		{
+//			if(typeof result == 'object')
+//			{
+//				client.request.session.character.position = result;
+//				client.emit('INIT_CHARACTER_POSITION', client.request.session.character);
+//			}
+//			else if(result != false)
+//			{
+//				client.emit('INIT_CHARACTER_POSITION', null);
+//			}
+//		});
+//		
+//		battleClient.on('MOVE_CHARACTER', function(result)
+//		{
+//			result.name = client.request.session.character.name;
+//			client.emit('MOVE_CHARACTER', result);
+//		});
+//		
+//		client.on('MOVE_CHARACTER', function(data)
+//		{
+//			battleClient.emit('MOVE_CHARACTER', {roomId : battleData.roomId, controlId : battleData.controlId, direction : data});
+//		});
+//	}
+//});

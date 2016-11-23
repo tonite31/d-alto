@@ -65,37 +65,21 @@ process.on('uncaughtException', function (err)
 
 
 
-//var mongoose = require('mongoose');
-//var db = mongoose.connection;
-//db.on('error', console.error);
-//db.once('open', function(){
-//    // CONNECTED TO MONGODB SERVER
-//    console.log("Connected to mongod server");
-//});
-//
-//mongoose.Promise = require('bluebird');
-// 
-//mongoose.connect('mongodb://localhost/data-server');
-
-var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-
-    next();
-}
-
-app.use(allowCrossDomain);
-
-
-
-
-var characters = require('./routes/characters');
-app.get('/getRandomCharacter', characters.getRandomCharacter);
-app.get('/', function(req, res, next, callback)
+var mongoose = require('mongoose');
+var db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', function()
 {
-	console.log("흠");
+    console.log("Connected to mongod server");
 });
+
+mongoose.Promise = require('bluebird');
+ 
+mongoose.connect('mongodb://localhost/data-server');
+
+require('./routers/characterRouter')(app);
+
+
 //app.post('/characters', characters.create);
 //app.put('/characters/skills', characters.bindSkills);
 

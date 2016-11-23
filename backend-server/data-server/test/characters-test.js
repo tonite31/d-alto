@@ -1,23 +1,78 @@
 var assert = require('assert');
 var httpMocks = require('node-mocks-http');
 
-var characters = require('../routes/characters');
-var characterSchema = require('../schema/character');
+var characterModule = require('../modules/characterModule');
+var characterSchema = require('../schema/characterSchema');
 
 var config = require('../../../config');
 
 describe('Character test', function()
 {
-	it('getRandomCharacter', function(done)
+	var conn = null;
+	beforeEach(function(done)
+	{
+		var mongoose = require('mongoose');
+		var db = mongoose.connection;
+		db.on('error', console.error);
+		
+		mongoose.Promise = require('bluebird');
+		 
+		conn = mongoose.connect('mongodb://localhost:27018/test', function()
+		{
+			mongoose.connection.collections.characters.drop(function(err)
+			{
+				done();
+			});
+		});
+	});
+	
+	afterEach(function()
+	{
+		conn.disconnect();
+	});
+	
+	it('getCharacters', function(done)
 	{
 		var req = httpMocks.createRequest();
 		var res = httpMocks.createResponse();
 		
-		characters.getRandomCharacter(req, res, null, function()
+		characterModule.getCharacters(req, res, null, function()
 		{
 			var data = res._getData();
-			assert(data.hp);
-			assert(data.mp);
+			assert(data instanceof Array);
+			done();
+		});
+	});
+	
+	it('getRandomCharacterStat', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		characterModule.getRandomCharacterStat(req, res, null, function()
+		{
+			var data = res._getData();
+			assert(typeof data.hp == 'number');
+			assert(typeof data.mp == 'number');
+			done();
+		});
+	});
+	
+	it('createCharacter', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		req.body.username = 'tester';
+		req.body.characterName = 'test_character';
+		req.body.hp = 10;
+		req.body.mp = 10;
+		
+		characterModule.createCharacter(req, res, null, function()
+		{
+			var data = res._getData();
+			assert(typeof data.hp == 'number');
+			assert(typeof data.mp == 'number');
 			done();
 		});
 	});

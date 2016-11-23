@@ -1,9 +1,9 @@
-var assert = require('assert');
-var httpMocks = require('node-mocks-http');
-
-var skills = require('../routes/skills');
-
-var config = require('../../../config');
+//var assert = require('assert');
+//var httpMocks = require('node-mocks-http');
+//
+//var skills = require('../routes/skills');
+//
+//var config = require('../../../config');
 
 //describe('Skills test', function()
 //{

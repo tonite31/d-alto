@@ -2,9 +2,13 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
  
 var Character = new Schema({
-	userId : String,
+	username : String,
 	name : String,
-	skills : [Number]
+	hp : Number,
+	mp : Number,
+	attackPoint : Number,
+	attackRange : Number,
+	moveSpeed : Number
 });
  
 module.exports = mongoose.model('character', Character);

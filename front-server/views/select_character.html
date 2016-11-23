@@ -1,0 +1,57 @@
+<script id="charactersTemplate" type="text/template">
+<tr>
+	<td>{number}</td>
+	<td>{name}</td>
+	<td>{hp}</td>
+	<td>{mp}</td>
+	<td>{attackPoint}</td>
+	<td>{attackRange}</td>
+	<td>{moveSpeed}</td>
+	<td><button type="button">접속</button></td>
+</tr>
+</script>
+
+<script>
+$(document).ready(function()
+{
+	$.ajax({url : '/api/getMyCharacter'}).done(function(data)
+	{
+		data = JSON.parse(data);
+		for(var i=0; i<data.length; i++)
+		{
+			var template = $('#charactersTemplate').html();
+			for(var key in data[i])
+			{
+				template = template.replace('{' + key + '}', data[i][key]);
+			}
+			
+			$('#charactersTable tbody').append(template.replace('{number}', i+1));
+		}
+	}).fail(function(error)
+	{
+		alert(error);	
+	});
+});
+</script>
+
+<div>
+	<h1>내 캐릭터 목록</h1>
+	<p>접속 버튼을 클릭하면 해당 캐릭터로 게임 접속.</p>
+	<a href="/create_character">캐릭터 생성</a>
+	<table style="width: 100%;" id="charactersTable">
+		<thead>
+			<tr>
+				<th>번호</th>
+				<th>캐릭터 이름</th>
+				<th>체력</th>
+				<th>마나</th>
+				<th>공격력</th>
+				<th>공격범위</th>
+				<th>이동속도</th>
+				<th>접속</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div>
