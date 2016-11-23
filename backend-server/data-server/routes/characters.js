@@ -56,12 +56,16 @@ exports.bindSkills = function(req, res, next, callback)
 //임시로 하드코딩
 var hpRange = [100, 1000]; 
 var mpRange = [100, 1000];
+var apRange = [10, 20];
 module.exports.getRandomCharacter = function(req, res, next)
 {
 	var hp = randomInt(hpRange[0], hpRange[1]);
 	var mp = randomInt(mpRange[0], mpRange[1]);
+	var ap = randomInt(apRange[0], apRange[1]);
+	var ar = 1;
+	var ms = 1;
 	
-	res.status(200).send({hp : hp, mp : mp});
+	res.status(200).send({hp : hp, mp : mp, attackPoint : ap, attackRange : ar, moveSpeed : ms});
 	
 	if(arguments.length == 4)
 		arguments[3]();

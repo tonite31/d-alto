@@ -20,7 +20,7 @@ $(document).ready(function()
 	{
 		formSubmit('#createCharacterForm', function(data)
 		{
-			$.ajax({url : '/api/joinBattleRoom', type : 'post'}).done(function(data)
+			$.ajax({url : '/api/joinBattleRoom', type : 'post', data : data}).done(function(data)
 			{
 				location.href = '/battle/' + data.roomId;
 			});

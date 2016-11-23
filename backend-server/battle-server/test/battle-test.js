@@ -145,6 +145,22 @@ describe('Battle test', function()
 				});
 			});
 		});
+		
+		it('getMapData', function(done)
+		{
+			var req = httpMocks.createRequest();
+			var res = httpMocks.createResponse();
+
+			req.body.roomId = "room";
+			req.body.character = {hp : 100, mp : 100, name : 'tester'};
+			battleRoute.joinBattleRoom(req, res, null, function()
+			{
+				var result = battle.getMapData("room");
+				assert(result instanceof Array);
+				
+				done();
+			});
+		});
 	});
 	
 	describe('Battle logic', function()
@@ -180,6 +196,10 @@ describe('Battle test', function()
 		
 		it('Move character', function()
 		{
+			var result = battle.getCharacterPosition(roomId, controlId);
+			assert.equal(result.x, 0);
+			assert.equal(result.y, 0);
+			
 			battle.moveCharacter(roomId, controlId, 'e');
 			var result = battle.getCharacterPosition(roomId, controlId);
 			

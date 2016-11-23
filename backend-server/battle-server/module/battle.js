@@ -14,6 +14,8 @@ var battleData = {};
 	
 	this.joinRoom = function(character)
 	{
+		character.type = 'user';
+		
 		if(rooms[prototypeRoomId])
 		{
 			var controlId = this.createControlId();
@@ -44,6 +46,14 @@ var battleData = {};
 		return rooms[roomId] != null && rooms[roomId].users[characterName] != null;
 	};
 	
+	this.getMapData = function(roomId)
+	{
+		if(rooms[roomId])
+			return rooms[roomId].map;
+		else
+			return null;
+	};
+	
 	this.getControlId = function(roomId, characterName)
 	{
 		if(rooms[roomId])
@@ -60,6 +70,9 @@ var battleData = {};
 		var character = rooms[roomId].users[controlId];
 		if(!character)
 			return null;
+		
+		if(character.position)
+			return false;
 		
 		var map = rooms[roomId].map;
 		for(var i=0; i<map.length; i++)
@@ -114,34 +127,43 @@ var battleData = {};
 		if(!character)
 			return null;
 		
-		var originPosition = character.position;
+		var originPosition = JSON.parse(JSON.stringify(character.position));
 		
 		switch(direction)
 		{
 			case 'n' :
-				character.position.y -= character.moveSpeed;
+				character.position.y -= new Number(character.moveSpeed);
 				break;
 			case 'e' :
-				character.position.x += character.moveSpeed;
+				character.position.x += new Number(character.moveSpeed);
 				break;
 			case 's' :
-				character.position.y += character.moveSpeed;
+				character.position.y += new Number(character.moveSpeed);
 				break;
 			case 'w' :
-				character.position.x -= character.moveSpeed;
+				character.position.x -= new Number(character.moveSpeed);
 				break;
 		};
 		
 		//이동가능한지 체크
-		var target = rooms[roomId].map[character.position.y][character.position.x];
-		if(!target || target.type == 'user')
+		if(character.position.y >= 0 && character.position.x >= 0 && character.position.y < rooms[roomId].map.length && character.position.x < rooms[roomId].map[0].length)
 		{
-			rooms[roomId].map[character.position.y][character.position.x] = character;
-			rooms[roomId].map[originPosition.y][originPosition.x] = 0;
-			return character.position;
+			var target = rooms[roomId].map[character.position.y][character.position.x];
+			if(!target || target.type == 'user')
+			{
+				rooms[roomId].map[character.position.y][character.position.x] = character;
+				rooms[roomId].map[originPosition.y][originPosition.x] = 0;
+				return character.position;
+			}
+			else
+			{
+				character.position = originPosition;
+				return false;
+			}
 		}
 		else
 		{
+			character.position = originPosition;
 			return false;
 		}
 	};

@@ -5,6 +5,8 @@ const ROW = 20;
 const COLUMN = 20;
 
 var logic = {};
+logic.row = ROW;
+logic.column = COLUMN;
 (function()
 {
 	//맵 번호를 받아와서 디비 조회를 통해 맵을 만들어주자.
