@@ -18,9 +18,9 @@ describe('Battle test', function()
 	//캐릭터 이동.
 	
 	//create dungeon
-	//join dungeon
-	//get map data
-	//move character
+	//join dungeon -- battle-server쪽에는 구현 완료.
+	//get map data //이건 join 후에 controlId랑 같이 받자.
+	//move character //join 한 후에는 controlId를 이용해서 캐릭터를 움직일 수 있음.
 	describe('Battle logic', function()
 	{
 		var dungeonId = null;
