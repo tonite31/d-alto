@@ -10,7 +10,7 @@ logic.column = COLUMN;
 (function()
 {
 	//맵 번호를 받아와서 디비 조회를 통해 맵을 만들어주자.
-	this.createMap = function()
+	this.createMap = function(mapNumber, callback)
 	{
 		var map = [];
 		for(var i=0; i<ROW; i++)
@@ -21,8 +21,8 @@ logic.column = COLUMN;
 				map[i].push(0);
 			}
 		}
-		
-		return map;
+
+		callback({map : map, initialPosition : [{x : 0, y : 0}]});
 	};
 	
 }).call(logic);

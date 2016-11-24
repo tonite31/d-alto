@@ -8,6 +8,7 @@ describe('Battle connection test', function()
 {
 	var conn = null;
 	var dungeonId = null;
+	var controlId = null;
 	
 	before(function(done)
 	{
@@ -47,7 +48,7 @@ describe('Battle connection test', function()
 				done();
 			});
 			
-			conn.emit('CREATE_DUNGEON_INSTANCE');
+			conn.emit('CREATE_DUNGEON_INSTANCE', {mapNumber : 0});
 		}
 		else
 		{
@@ -63,11 +64,36 @@ describe('Battle connection test', function()
 			{
 				assert.equal(res.statusCode, 200);
 				assert(res.data.controlId);
+				assert(res.data.mapData.map instanceof Array);
+				
+				controlId = res.data.controlId;
 				
 				done();
 			});
 			
-			conn.emit('JOIN_DUNGEON_INSTANCE', {dungeonId : dungeonId});
+			conn.emit('JOIN_DUNGEON_INSTANCE', {dungeonId : dungeonId, character : {moveSpeed : 1}});
+		}
+		else
+		{
+			done();
+		}
+	});
+	
+	it('moveCharacter', function(done)
+	{
+		if(conn)
+		{
+			conn.on('MOVE_CHARACTER', function(res)
+			{
+				assert.equal(res.statusCode, 200);
+				assert(typeof res.data.position == 'object');
+				assert(typeof res.data.position.x == 'number');
+				assert(typeof res.data.position.y == 'number');
+				
+				done();
+			});
+			
+			conn.emit('MOVE_CHARACTER', {dungeonId : dungeonId, controlId : controlId, direction : 'e'});
 		}
 		else
 		{

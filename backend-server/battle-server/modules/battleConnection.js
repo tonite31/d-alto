@@ -8,7 +8,7 @@ var _connectionManager = {};
 	var modules = {};
 	modules.CREATE_DUNGEON_INSTANCE = function(response, data)
 	{
-		var dungeonId = battleManager.createDungeonInstance();
+		var dungeonId = battleManager.createDungeonInstance(data.mapNumber);
 		this.client.join(dungeonId);
 		this.currentDungeonId = dungeonId;
 		
@@ -19,12 +19,11 @@ var _connectionManager = {};
 	{
 		//아무나 접속할 수 없게 처리해야한다.
 		//나중에는 파티단위로 들어갈거기 때문에. 일단은 아무나로.
-		console.log("데이터 ; ", data);
 		var dungeonId = data.dungeonId;
-		var controlId = battleManager.joinDungeonInstance(dungeonId);
+		var controlId = battleManager.joinDungeonInstance(dungeonId, data.character);
 		if(controlId)
 		{
-			response({statusCode : 200, data : {controlId : controlId}});
+			response({statusCode : 200, data : {controlId : controlId, mapData : battleManager.getMapData(dungeonId)}});
 		}
 		else
 		{
@@ -32,14 +31,15 @@ var _connectionManager = {};
 		}
 	};
 	
-//	modules.MOVE_CHARACTER = function(res, data)
-//	{
-//		var controlId = data.controlId;
-//		var characterId = data.characterId;
-//		var direction = data.direction;
-//		
-//		res({statusCode : 200, characterId : characterId, x : 0, y : 0});
-//	};
+	modules.MOVE_CHARACTER = function(response, data)
+	{
+		var dungeonId = data.dungeonId;
+		var controlId = data.controlId;
+		var direction = data.direction;
+		
+		var result = battleManager.moveCharacter(dungeonId, controlId, direction);
+		response({statusCode : 200, data : {position : result}});
+	};
 	
 	function Client(connection, client)
 	{
