@@ -49,6 +49,24 @@ module.exports.connection = (function()
 		
 		if(res.data.dungeonId)
 		{
+			//여기서 client는 front와 연결된 client인가? 그런듯
+		}
+		else
+		{
+			if(client)
+			{
+				//에러를 사용자에게 알려줘야 함.
+			}
+		}
+	};
+	
+	modules.JOIN_DUNGEON_INSTANCE = function(client, battleServer, res)
+	{
+		if(callbacksForTest.JOIN_DUNGEON_INSTANCE)
+			callbacksForTest.JOIN_DUNGEON_INSTANCE(res);
+		
+		if(res.data.controlId && res.data.mapData)
+		{
 			
 		}
 		else
@@ -56,6 +74,24 @@ module.exports.connection = (function()
 			if(client)
 			{
 				//에러를 사용자에게 알려줘야 함.
+			}
+		}
+	};
+	
+	modules.MOVE_CHARACTER = function(client, battleServer, res)
+	{
+		if(callbacksForTest.MOVE_CHARACTER)
+			callbacksForTest.MOVE_CHARACTER(res);
+		
+		if(res.data.characterId && res.data.position)
+		{
+			
+		}
+		else
+		{
+			if(client)
+			{
+				
 			}
 		}
 	};
@@ -85,15 +121,31 @@ module.exports.connection = (function()
 	
 	BattleConnection.prototype.disconnect = function()
 	{
-		this.conn.disconnect();
+		this.battleServer.disconnect();
 	};
 	
-	BattleConnection.prototype.createDungeonInstance = function(callback)
+	BattleConnection.prototype.createDungeonInstance = function(mapNumber, callback)
 	{
 		if(callback)
 			callbacksForTest.CREATE_DUNGEON_INSTANCE = callback;
 		
-		this.battleServer.emit('CREATE_DUNGEON_INSTANCE');
+		this.battleServer.emit('CREATE_DUNGEON_INSTANCE', {mapNumber : mapNumber});
+	};
+	
+	BattleConnection.prototype.joinDungeonInstance = function(dungeonId, character, callback)
+	{
+		if(callback)
+			callbacksForTest.JOIN_DUNGEON_INSTANCE = callback;
+		
+		this.battleServer.emit('JOIN_DUNGEON_INSTANCE', {dungeonId : dungeonId, character : character});
+	};
+	
+	BattleConnection.prototype.moveCharacter = function(dungeonId, controlId, direction, callback)
+	{
+		if(callback)
+			callbacksForTest.MOVE_CHARACTER = callback;
+		
+		this.battleServer.emit('MOVE_CHARACTER', {dungeonId : dungeonId, controlId : controlId, direction : direction});
 	};
 	
 	return BattleConnection;

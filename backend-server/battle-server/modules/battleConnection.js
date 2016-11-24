@@ -8,6 +8,12 @@ var _connectionManager = {};
 	var modules = {};
 	modules.CREATE_DUNGEON_INSTANCE = function(response, data)
 	{
+		if(data.mapNumber == null)
+		{
+			response({statusCode : 404, message : 'mapNumber_not_found'});
+			return;
+		}
+		
 		var dungeonId = battleManager.createDungeonInstance(data.mapNumber);
 		this.client.join(dungeonId);
 		this.currentDungeonId = dungeonId;
@@ -19,6 +25,18 @@ var _connectionManager = {};
 	{
 		//아무나 접속할 수 없게 처리해야한다.
 		//나중에는 파티단위로 들어갈거기 때문에. 일단은 아무나로.
+		
+		if(data.dungeonId == null)
+		{
+			response({statusCode : 404, message : 'dungeon_id_not_found'});
+			return;
+		}
+		else if(data.character == null)
+		{
+			response({statusCode : 404, message : 'character_not_found'});
+			return;
+		}
+		
 		var dungeonId = data.dungeonId;
 		var controlId = battleManager.joinDungeonInstance(dungeonId, data.character);
 		if(controlId)
@@ -33,12 +51,37 @@ var _connectionManager = {};
 	
 	modules.MOVE_CHARACTER = function(response, data)
 	{
+		for(var key in data)
+		{
+			if(data[key] == null)
+			{
+				response({statusCode : 404, message : key + '_not_found'});
+				return;
+			}
+		}
+		
 		var dungeonId = data.dungeonId;
 		var controlId = data.controlId;
 		var direction = data.direction;
 		
+		if(dungeonId == null)
+		{
+			response({statusCode : 404, message : 'dungeonId_not_found'});
+			return;
+		}
+		else if(controlId == null)
+		{
+			response({statusCode : 404, message : 'controlId_not_found'});
+			return;
+		}
+		else if(direction == null)
+		{
+			response({statusCode : 404, message : 'direction_not_found'});
+			return;
+		}
+		
 		var result = battleManager.moveCharacter(dungeonId, controlId, direction);
-		response({statusCode : 200, data : {position : result}});
+		response({statusCode : 200, data : result});
 	};
 	
 	function Client(connection, client)

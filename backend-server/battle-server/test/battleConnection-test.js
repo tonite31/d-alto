@@ -71,7 +71,7 @@ describe('Battle connection test', function()
 				done();
 			});
 			
-			conn.emit('JOIN_DUNGEON_INSTANCE', {dungeonId : dungeonId, character : {moveSpeed : 1}});
+			conn.emit('JOIN_DUNGEON_INSTANCE', {dungeonId : dungeonId, character : {_id : 'tester', moveSpeed : 1}});
 		}
 		else
 		{
@@ -86,6 +86,7 @@ describe('Battle connection test', function()
 			conn.on('MOVE_CHARACTER', function(res)
 			{
 				assert.equal(res.statusCode, 200);
+				assert.equal(res.data.characterId, 'tester');
 				assert(typeof res.data.position == 'object');
 				assert(typeof res.data.position.x == 'number');
 				assert(typeof res.data.position.y == 'number');

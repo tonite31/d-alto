@@ -99,7 +99,7 @@ var battleManager = {};
 			{
 				map[character.position.y][character.position.x] = character;
 				map[originPosition.y][originPosition.x] = 0;
-				return character.position;
+				return {characterId : character._id, position : character.position};
 			}
 			else
 			{
