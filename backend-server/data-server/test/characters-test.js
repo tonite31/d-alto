@@ -36,7 +36,7 @@ describe('Character test', function()
 		var req = httpMocks.createRequest();
 		var res = httpMocks.createResponse();
 		
-		characterModule.getCharacters(req, res, null, function()
+		characterModule.getCharactersByUsername(req, res, null, function()
 		{
 			var data = res._getData();
 			assert(data instanceof Array);
@@ -74,6 +74,75 @@ describe('Character test', function()
 			assert(typeof data.hp == 'number');
 			assert(typeof data.mp == 'number');
 			done();
+		});
+	});
+	
+	it('deleteCharacter', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		req.body.username = 'tester';
+		req.body.characterName = 'test_character';
+		req.body.hp = 10;
+		req.body.mp = 10;
+		
+		characterModule.createCharacter(req, res, null, function()
+		{
+			var data = res._getData();
+			assert(typeof data.hp == 'number');
+			assert(typeof data.mp == 'number');
+			
+			req = httpMocks.createRequest();
+			res = httpMocks.createResponse();
+			
+			req.body._id = data._id;
+			
+			characterModule.deleteCharacter(req, res, null, function()
+			{
+				var data = res._getData();
+				assert(res.statusCode, 200);
+				done();
+			});
+		});
+	});
+	
+	it('getCharacter', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		req.body.username = 'tester';
+		req.body.characterName = 'test_character';
+		req.body.hp = 10;
+		req.body.mp = 10;
+		
+		characterModule.createCharacter(req, res, null, function()
+		{
+			var data = res._getData();
+			assert(typeof data.hp == 'number');
+			assert(typeof data.mp == 'number');
+			
+			req = httpMocks.createRequest();
+			res = httpMocks.createResponse();
+			
+			req.session = {username : 'tester'};
+			req.params._id = data._id;
+			
+			characterModule.getCharacter(req, res, null, function()
+			{
+				req = httpMocks.createRequest();
+				res = httpMocks.createResponse();
+				
+				req.params._id = data._id;
+				
+				characterModule.deleteCharacter(req, res, null, function()
+				{
+					var data = res._getData();
+					assert(res.statusCode, 200);
+					done();
+				});
+			});
 		});
 	});
 });

@@ -3,7 +3,7 @@ var config = require('../../config');
 
 const DATA_SERVER_HOST = 'http://' + config.server['data-server'].host + ':' + config.server['data-server'].port;
 
-module.exports.getMyCharacter = function(req, res, next)
+module.exports.getMyCharacters = function(req, res, next)
 {
 	var callback = arguments[3];
 	
@@ -42,6 +42,40 @@ module.exports.getMyCharacter = function(req, res, next)
 		
 		if(callback)
 			callback();
+	});
+};
+
+module.exports.getCharacter = function(req, callback)
+{
+	var testCallback = arguments[3];
+	
+	if(!req.session.username)
+	{
+		res.status(401).end();
+		if(callback)
+			callback();
+		
+		return;
+	}
+	
+	var options = {};
+	options.url = DATA_SERVER_HOST + '/characters/' + req.session.username + '/' + req.body.characterId;
+	options.method = 'GET';
+	
+	request(options, function(err, response, data)
+	{
+		if(err)
+		{
+			console.log(err);
+			throw new Error(err);
+		}
+		else
+		{
+			callback(response.statusCode, data);
+		}
+		
+		if(testCallback)
+			testCallback();
 	});
 };
 
@@ -122,15 +156,35 @@ module.exports.createCharacter = function(req, res, next)
 		}
 		else
 		{
-			if(response.statusCode == 201)
-			{
-				res.status(201).end();
-			}
-			else
-			{
-				console.log(err);
-				res.status(response.statusCode).send(data);
-			}
+			res.status(response.statusCode).send(data);
+		}
+		
+		if(callback)
+			callback();
+	});
+};
+
+module.exports.deleteCharacter = function(req, res, next)
+{
+	var callback = arguments[3];
+	
+	var options = {};
+	options.url = DATA_SERVER_HOST + '/characters';
+	options.method = 'DELETE';
+	options.form = {};
+	options.form.username = req.session.username;
+	options.form._id = req.body.characterId;
+	
+	request(options, function(err, response, data)
+	{
+		if(err)
+		{
+			console.log(err);
+			throw new Error(err);
+		}
+		else
+		{
+			res.status(response.statusCode).send(data);
 		}
 		
 		if(callback)

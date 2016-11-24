@@ -46,6 +46,34 @@ describe('Users test', function()
 		});
 	});
 	
+	it('Login success', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		req.body.username = 'tester';
+		req.body.password = '1234';
+		
+		userModule.createUser(req, res, null, function()
+		{
+			assert.equal(res.statusCode, 201);
+			req = httpMocks.createRequest();
+			res = httpMocks.createResponse();
+			
+			req.session = {};
+			req.body.username = 'tester';
+			req.body.password = '1234';
+			
+			userModule.login(req, res, null, function()
+			{
+				var data = res._getData();
+				assert.equal(res.statusCode, 200);
+				assert.equal(data, 'login_success');
+				done();
+			});
+		});
+	});
+	
 	it('Login of not found', function(done)
 	{
 		var req = httpMocks.createRequest();
@@ -80,6 +108,41 @@ describe('Users test', function()
 				assert.equal(res.statusCode, 200);
 				assert.equal(data, 'password_disaccord');
 				done();
+			});
+		});
+	});
+	
+	it('use chearacter', function(done)
+	{
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
+		
+		req.session = {};
+		req.session.username = 'tester';
+		req.body.characterId = '1234';
+		req.body.username = 'tester';
+		req.body.password = '1234';
+		
+		userModule.createUser(req, res, null, function()
+		{
+			assert.equal(res.statusCode, 201);
+			
+			res = httpMocks.createResponse();
+			userModule.login(req, res, null, function()
+			{
+				var data = res._getData();
+				assert.equal(res.statusCode, 200);
+				assert.equal(data, 'login_success');
+				
+				res = httpMocks.createResponse();
+				userModule.checkLoginState(req, res, null, function()
+				{
+					var data = res._getData();
+					assert.equal(res.statusCode, 200);
+					assert.equal(data, 'true');
+					
+					done();
+				});
 			});
 		});
 	});

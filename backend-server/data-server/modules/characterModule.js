@@ -47,6 +47,29 @@ module.exports.getRandomCharacterStat = function(req, res, next)
 		callback();
 };
 
+module.exports.getCharactersByUsernameAndId = function(req, res, next)
+{
+	var callback = arguments[3];
+	
+	var username = req.params.username;
+	
+	characterSchema.find({_id : req.params.id}).exec(function(error, data)
+	{
+		if(error)
+		{
+			console.log(error);
+			throw new Error(error);
+		}
+		else
+		{
+			res.status(200).send(data);
+		}
+		
+		if(callback)
+			callback();
+	});
+};
+
 module.exports.createCharacter = function(req, res, next)
 {
 	var callback = arguments[3];
@@ -62,6 +85,27 @@ module.exports.createCharacter = function(req, res, next)
 		else
 		{
 			res.status(201).send(data);
+			
+			if(callback)
+				callback();
+		}
+	});
+};
+
+module.exports.deleteCharacter = function(req, res, next)
+{
+	var callback = arguments[3];
+	
+	characterSchema.remove({_id : req.body._id}).exec(function(error, data)
+	{
+		if(error)
+		{
+			console.log(error);
+			throw new Error(error);
+		}
+		else
+		{
+			res.status(200).send(data);
 			
 			if(callback)
 				callback();

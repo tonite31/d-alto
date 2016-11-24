@@ -8,8 +8,10 @@
     "express": "*",
     "express-session": "^1.14.1",
     "method-override": "*",
+    "mongoose": "^4.7.0",
     "redis": "^2.6.2",
-    "socket.io": "^1.5.1"
+    "socket.io": "^1.5.1",
+    "socket.io-client": "^1.6.0"
   },
   "devDependencies": {
     "node-mocks-http": "^1.5.4"

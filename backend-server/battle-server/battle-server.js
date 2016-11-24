@@ -2,7 +2,6 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var session = require('express-session');
-var io = require('socket.io');
 
 var config = require('../../config');
 
@@ -65,42 +64,58 @@ process.on('uncaughtException', function (err)
 });
 
 
+var mongoose = require('mongoose');
+var db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', function()
+{
+    console.log("Connected to mongod server");
+});
 
-var battleRouter = require('./routes/battleRoute');
-app.get('/clearBattleRoom', battleRouter.clearBattleRoom);
-app.get('/checkUserInTheRoom', battleRouter.checkUserInTheRoom);
-app.post('/joinBattleRoom', battleRouter.joinBattleRoom);
-app.post('/getControlId', battleRouter.getControlId);
-app.get('/getCharacterPosition', battleRouter.getCharacterPosition);
+mongoose.Promise = require('bluebird');
+ 
+mongoose.connect('mongodb://localhost/battle-server');
+
+
+require('./routers/dungeonRouter')(app);
+require('./modules/battleConnection').initialize(server);
+
+
+//var battleRouter = require('./routes/battleRoute');
+//app.get('/clearBattleRoom', battleRouter.clearBattleRoom);
+//app.get('/checkUserInTheRoom', battleRouter.checkUserInTheRoom);
+//app.post('/joinBattleRoom', battleRouter.joinBattleRoom);
+//app.post('/getControlId', battleRouter.getControlId);
+//app.get('/getCharacterPosition', battleRouter.getCharacterPosition);
 
 
 //----------------------------------------------------------------
-var battle = require('./module/battle');
-
-var socket = io.listen(server);
-socket.on('connection', function(client)
-{
-	client.on('GET_MAP_DATA', function(roomId)
-	{
-		var result = battle.getMapData(roomId);
-		client.emit('GET_MAP_DATA', result);
-	});
-	
-	client.on('INIT_CHARACTER_POSITION', function(data)
-	{
-		var roomId = data.roomId;
-		var controlId = data.controlId;
-		var position = battle.setInitPositionOfCharacter(roomId, controlId);
-		client.emit('INIT_CHARACTER_POSITION', position);
-	});
-	
-	client.on('MOVE_CHARACTER', function(data)
-	{
-		var roomId = data.roomId;
-		var controlId = data.controlId;
-		var direction = data.direction;
-		
-		var result = battle.moveCharacter(roomId, controlId, direction);
-		socket.emit('MOVE_CHARACTER', result);
-	});
-});
+//var battle = require('./module/battle');
+//
+//var socket = io.listen(server);
+//socket.on('connection', function(client)
+//{
+//	client.on('GET_MAP_DATA', function(roomId)
+//	{
+//		var result = battle.getMapData(roomId);
+//		client.emit('GET_MAP_DATA', result);
+//	});
+//	
+//	client.on('INIT_CHARACTER_POSITION', function(data)
+//	{
+//		var roomId = data.roomId;
+//		var controlId = data.controlId;
+//		var position = battle.setInitPositionOfCharacter(roomId, controlId);
+//		client.emit('INIT_CHARACTER_POSITION', position);
+//	});
+//	
+//	client.on('MOVE_CHARACTER', function(data)
+//	{
+//		var roomId = data.roomId;
+//		var controlId = data.controlId;
+//		var direction = data.direction;
+//		
+//		var result = battle.moveCharacter(roomId, controlId, direction);
+//		socket.emit('MOVE_CHARACTER', result);
+//	});
+//});

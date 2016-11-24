@@ -50,10 +50,32 @@ module.exports.login = function(req, res, next)
 		{
 			if(data)
 			{
+				if(data.loginState)
+				{
+					//중복로그인 처리.
+				}
+				
 				if(data.password === req.body.password)
 				{
 					req.session.username = data.username;
-					res.status(200).end('login_success');
+					
+					var user = new UserSchema(data);
+					user.loginState = true;
+					user.save(function(err, data)
+					{
+						if(err)
+						{
+							console.log(err);
+							res.status(500).end(err);
+							throw new Error(err);
+						}
+						
+						res.status(200).end('login_success');
+						if(callback)
+							callback();
+					});
+					
+					return;
 				}
 				else
 				{
@@ -68,5 +90,35 @@ module.exports.login = function(req, res, next)
 			if(callback)
 				callback();
 		}
+	});
+};
+
+module.exports.checkLoginState = function(req, res, next)
+{
+	var callback = arguments[3];
+	
+	UserSchema.findOne({username : req.body.username}, function(error, data)
+	{
+		if(error)
+	    {
+	    	console.log(error);
+	    	throw new Error(error);
+	    }
+		
+		var user = new UserSchema(data);
+		user.connectionInfo = {character : req.body.characterId};
+		user.save(function(error, data)
+		{
+			if(error)
+		    {
+		    	console.log(error);
+		    	throw new Error(error);
+		    }
+			
+			res.status(200).send(data.loginState);
+		    
+			if(callback)
+				callback();
+		});
 	});
 };

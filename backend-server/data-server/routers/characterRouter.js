@@ -3,7 +3,9 @@ var characterModule = require('../modules/characterModule');
 module.exports = function(app)
 {
 	app.get('/characters/:username', characterModule.getCharactersByUsername);
+	app.get('/characters/:username/:id', characterModule.getCharactersByUsernameAndId);
 	app.post('/characters', characterModule.createCharacter);
+	app.delete('/characters', characterModule.deleteCharacter);
 	app.get('/random/characterstat', characterModule.getRandomCharacterStat);
 };
 
