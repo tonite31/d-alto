@@ -15,6 +15,8 @@ var server = app.listen(config.server['world-server'].port, function()
 	console.log('Listening on port %d', server.address().port);
 });
 
+var sessionMiddleware = null;
+
 if(config.redis && config.redis.host && config.redis.port)
 {
 	var RedisStore = require('connect-redis')(session);
@@ -26,7 +28,7 @@ if(config.redis && config.redis.host && config.redis.port)
 		console.log('connected to redis!!');
 	});
 	
-	app.use(session({
+	app.use(sessionMiddleware = session({
 	    store: new RedisStore({client: client}),
 	    secret: 'd-alto',
 	    saveUninitialized: true,
@@ -35,7 +37,7 @@ if(config.redis && config.redis.host && config.redis.port)
 }
 else
 {
-	app.use(session({ secret: 'd-alto', resave: true, saveUninitialized: true}));
+	app.use(sessionMiddleware = session({ secret: 'd-alto', resave: true, saveUninitialized: true}));
 }
 
 app.use('/views', express.static(path.get('views')));
@@ -74,13 +76,6 @@ process.on('uncaughtException', function (err)
 
 
 
-app.get('/', function(req, res, next)
-{
-	res.render('index');
-});
-
-
-
 var row = 100;
 var col = 100;
 var map = [];
@@ -105,16 +100,38 @@ var setCharacterPosition = function(character)
 	}
 };
 
+var characters = {};
+
+app.get('/', function(req, res, next)
+{
+	if(!req.session.character)
+	{
+		req.session.character = {id : new Date().getTime(), moveSpeed : 1};
+		characters[req.session.character.id] = req.session.character;
+		setCharacterPosition(req.session.character);
+	}
+	
+	res.render('index');
+});
+
+
+
+
 var io = require('socket.io')(server);
+io.use(function(socket, next)
+{
+	sessionMiddleware(socket.request, socket.request.res, next);
+});
+
 io.on('connection', function(client)
 {
 	console.log("connection");
+	if(!client.request.session.character)
+		return;
 	
-	var character = {id : new Date().getTime(), moveSpeed : 1};
-	setCharacterPosition(character);
+	var character = characters[client.request.session.character.id];
 	
-	client.emit('CONNECTION', {map : map, character : character});
-	
+	client.emit('CONNECTION', {map : map});
 	client.on('MOVE_CHARACTER', function(direction)
 	{
 		var originPosition = JSON.parse(JSON.stringify(character.position));
@@ -134,7 +151,7 @@ io.on('connection', function(client)
 				map[character.position.x][character.position.y] = character;
 				map[originPosition.x][originPosition.y] = null;
 				
-				io.emit('MOVE_CHARACTER', {id : character.id, position : character.position});
+				io.emit('MOVE_CHARACTER', {id : character.id, position : character.position, direction : direction});
 				return;
 			}
 		}
