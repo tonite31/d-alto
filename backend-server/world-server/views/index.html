@@ -1,183 +1,57 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <style>
-.screen
-{
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-}
-
-.map
-{
-	position: absolute;
-	left: 0;
-	top: 0;
-	
-	background-image: url(http://www.khgames.co.kr/news/photo/images/imglib16/379_14_1_6.jpg);
-	background-repeat: no-repeat;
-	background-size: 100% 100%;
-}
-
 .character
 {
 	position: absolute;
-	
-	width: 60px;
-	height: 130px;
-	
-	background-image: url(/views/images/character.png);
-	background-position: center bottom;
-	background-repeat: no-repeat;
+	width: 75px;
+	height: 100px;
 }
 </style>
 
-<script id="character" type="text/template">
-<div class="character"></div>
-</script>
 <script>
+var speed = 10;
+var createCharacter = function(character)
+{
+	var position = character.position;
+	
+	var x = position.x * speed;
+	var y = position.y * speed;
+	
+	var template = '<img class="character" src="/views/images/cha_ass_m.gif">';
+	template = $(template);
+	template.attr('id', character.id).css('left', x + 'px').css('top', y + 'px');
+	
+	$('#map').append(template);
+};
 
-var tileSize = 30;
-
-var map = {left : 0, top : 0};
-var mapWidth = 100 * tileSize;
-var mapHeight = 100 * tileSize;
-var screenWidth = null;
-var screenHeight = null;
-
-var checkBoundary = 0.8;
-
-var checkLeft = null;
-var checkRight = null;
-var checkTop = null;
-var checkBottom = null;
-
-var scrollableWidth = false;
-var scrollableHeight = false;
+var moveCharacter = function(character)
+{
+	var position = character.position;
+	var x = position.x * speed;
+	var y = position.y * speed;
+	
+	$('#' + character.id).css('left', x + 'px').css('top', y + 'px');
+};
 
 var socket = io.connect();
-socket.on('MOVE_CHARACTER', function(data)
+socket.on('CONNECTED', function(characters)
 {
-	var id = data.id;
-	var position = data.position;
-	var direction = data.direction;
-	
-	//서쪽으로 이동하면 맵을 동쪽으로 이동시킨다.
-	//스크린의 가운데 60%안에 캐릭터가 있을때만.
-	//그리고 더 이상 맵을 이동시킬 수 없는 경우도 종료.
-	
-	var left = (position.x * tileSize);
-	var top = (position.y * tileSize);
-	
-	var ccLeft = left + map.left;
-	var ccTop = top + map.top;
-	
-	if(direction == 'e' || direction == 'w')
+	for(var key in characters)
 	{
-		if(checkLeft <= ccLeft && ccLeft <= checkRight)
-		{
-			scrollableWidth = true;
-		}
-		else if(scrollableWidth)
-		{
-			if(direction == 'e')
-			{
-				if(map.left + mapWidth > screenWidth)
-					map.left -= tileSize;
-				else
-					scrollableWidth = false;
-			}
-			else if(direction == 'w')
-			{
-				if(map.left < 0 && map.left + mapWidth >= screenWidth)
-					map.left += tileSize;
-				else
-					scrollableWidth = false;
-			}
-		}
-	}
-	else
-	{
-		if(checkTop <= ccTop && ccTop <= checkBottom)
-		{
-			scrollableHeight = true;
-		}
-		else if(scrollableHeight)
-		{
-			if(direction == 's')
-			{
-				if(map.top + mapHeight > screenHeight)
-					map.top -= tileSize;
-				else
-					scrollableHeight = false;
-			}
-			else if(direction == 'n')
-			{
-				if(map.top < 0 && map.top + mapHeight >= screenHeight)
-					map.top += tileSize;
-				else
-					scrollableHeight = false;
-			}
-		}
-	}
-	
-	$('#map').css('left', map.left + 'px').css('top', map.top + 'px');
-	
-	$('#' + id).css('left', left + 'px').css('top', top - 130 + 'px');
-});
-		
-socket.on('CONNECTION', function(data)
-{
-	var character = data.character;
-	var map = data.map;
-	
-	$('#map').css('width', (100 * tileSize) + 'px').css('height', (100 * tileSize) + 'px');
-	
-	for(var i=0; i<100; i++)
-	{
-		for(var j=0; j<100; j++)
-		{
-			if(map[i][j])
-			{
-				var position = map[i][j].position;
-				var x = position.x;
-				var y = position.y;
-				var template = $('#character').html();
-				template = $(template);
-				template.attr('id', map[i][j].id).css('left', x * tileSize + 'px').css('top', (y * tileSize - 130) + 'px');
-				
-				$('#map').append(template);
-			}
-			else
-			{
-				//랜덤으로 뭔가 배치해놓자.
-			}
-		}
+		createCharacter(characters[key]);
 	}
 });
-
-var setCharacterToCenter = function()
+socket.on('USER_CONNECTED', function(character)
 {
-		
-}
+	if($('#' + character.id).length <= 0) 
+		createCharacter(character);
+});
 
-$(document).ready(function()
+socket.on('MOVE_CHARACTER', function(characters)
 {
-	screenWidth = new Number($('#screen').css('width').replace('px', ''));
-	screenHeight = new Number($('#screen').css('height').replace('px', ''));
-	
-	screenWidth = parseInt(screenWidth / 10);
-	screenWidth *= 10;
-	screenHeight = parseInt(screenHeight / 10);
-	screenHeight *= 10;
-	
-	checkRight = screenWidth * checkBoundary;
-	checkLeft = screenWidth * (1 - checkBoundary);
-	checkBottom = screenHeight * checkBoundary;
-	checkTop = screenHeight * (1 - checkBoundary);
+	for(var key in characters)
+		moveCharacter(characters[key]);
 });
 
 $(window).on('keydown', function(e)
@@ -185,19 +59,19 @@ $(window).on('keydown', function(e)
 	var keyCode = e.keyCode;
 	if(keyCode == 68)
 	{
-		socket.emit('MOVE_CHARACTER', 'e');
+		socket.emit('MOVE_CHARACTER', 'right');
 	}
 	else if(keyCode == 83)
 	{
-		socket.emit('MOVE_CHARACTER', 's');
+		socket.emit('MOVE_CHARACTER', 'down');
 	}
 	else if(keyCode == 65)
 	{
-		socket.emit('MOVE_CHARACTER', 'w');
+		socket.emit('MOVE_CHARACTER', 'left');
 	}
 	else if(keyCode == 87)
 	{
-		socket.emit('MOVE_CHARACTER', 'n');
+		socket.emit('MOVE_CHARACTER', 'up');
 	}
 });
 </script>

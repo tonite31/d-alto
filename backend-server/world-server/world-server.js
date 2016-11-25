@@ -76,29 +76,29 @@ process.on('uncaughtException', function (err)
 
 
 
-var row = 100;
-var col = 100;
-var map = [];
-for(var i=0; i<col; i++)
-{
-	map[i] = [];
-}
-
-var setCharacterPosition = function(character)
-{
-	for(var i=0; i<row; i++)
-	{
-		for(var j=0; j<col; j++)
-		{
-			if(!map[i][j])
-			{
-				map[i][j] = character;
-				character.position = {x : i, y : j};
-				return;
-			}
-		}
-	}
-};
+//var row = 100;
+//var col = 100;
+//var map = [];
+//for(var i=0; i<col; i++)
+//{
+//	map[i] = [];
+//}
+//
+//var setCharacterPosition = function(character)
+//{
+//	for(var i=0; i<row; i++)
+//	{
+//		for(var j=0; j<col; j++)
+//		{
+//			if(!map[i][j])
+//			{
+//				map[i][j] = character;
+//				character.position = {x : i, y : j};
+//				return;
+//			}
+//		}
+//	}
+//};
 
 var characters = {};
 
@@ -106,9 +106,8 @@ app.get('/', function(req, res, next)
 {
 	if(!req.session.character)
 	{
-		req.session.character = {id : new Date().getTime(), moveSpeed : 1};
+		req.session.character = {id : new Date().getTime(), position : {x : 0, y : 0}, moveSpeed : 1};
 		characters[req.session.character.id] = req.session.character;
-		setCharacterPosition(req.session.character);
 	}
 	
 	res.render('index');
@@ -125,37 +124,31 @@ io.use(function(socket, next)
 
 io.on('connection', function(client)
 {
-	console.log("connection");
 	if(!client.request.session.character)
 		return;
 	
 	var character = characters[client.request.session.character.id];
 	
-	client.emit('CONNECTION', {map : map});
+	client.emit('CONNECTED', characters);
+	client.broadcast.emit('USER_CONNECTED', character);
 	client.on('MOVE_CHARACTER', function(direction)
 	{
 		var originPosition = JSON.parse(JSON.stringify(character.position));
-		if(direction == 'e')
+		if(direction == 'right')
 			character.position.x += character.moveSpeed;
-		else if(direction == 'w')
+		else if(direction == 'left')
 			character.position.x -= character.moveSpeed;
-		else if(direction == 's')
+		else if(direction == 'down')
 			character.position.y += character.moveSpeed;
-		else if(direction == 'n')
+		else if(direction == 'up')
 			character.position.y -= character.moveSpeed;
 		
-		if(character.position.y >= 0 && character.position.x >= 0 && character.position.y < row && character.position.x < col)
-		{
-			if(!map[character.position.x][character.position.y])
-			{
-				map[character.position.x][character.position.y] = character;
-				map[originPosition.x][originPosition.y] = null;
-				
-				io.emit('MOVE_CHARACTER', {id : character.id, position : character.position, direction : direction});
-				return;
-			}
-		}
-		
-		character.position = originPosition;
+//		character.position = originPosition;
+//		io.emit('MOVE_CHARACTER', {id : character.id, position : character.position, direction : direction});
 	});
+	
+	setInterval(function()
+	{
+		io.emit('MOVE_CHARACTER', characters);
+	}, 1000 / 30); //30프레임
 });
