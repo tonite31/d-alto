@@ -1,237 +1,41 @@
 var assert = require('assert');
 var httpMocks = require('node-mocks-http');
 
-var battle = require('../module/battle');
-var battleRoute = require('../routes/battleRoute');
+var dungeonModule = require('../modules/dungeonModule');
 
 var config = require('../../../config');
 
 describe('Battle test', function()
 {
-	describe('Ready for battle', function()
+	it('createDungeon for error', function(done)
 	{
-		beforeEach(function()
-		{
-			battle.clearRoom();
-		});
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
 		
-		it('joinBattleRoom', function(done)
+		dungeonModule.createDungeonInstance(req, res, null, function()
 		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
+			var data = res._getData();
+			assert.equal(res.statusCode, 500);
+			assert.equal(data, 'map_number_not_found');
 			
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				var data = res._getData();
-				assert.equal(res.statusCode, 200);
-				assert.equal(data.roomId, "room");
-				done();
-			});
-		});
-		
-		it('checkUserInTheRoom', function(done)
-		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-			
-			req.body.roomId = "room";
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.body.roomId = "room";
-				req.body.characterName = 'tester';
-				
-				battleRoute.checkUserInTheRoom(req, res, null, function()
-				{
-					var data = res._getData();
-					assert.equal(res.statusCode, 200);
-					assert(data.match(/[0-9]*/gi) != null);
-					done();
-				});
-			});
-		});
-		
-		it('getControlId', function(done)
-		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-			
-			req.body.roomId = "room";
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.body.roomId = "room";
-				req.body.characterName = 'tester';
-				
-				battleRoute.getControlId(req, res, null, function()
-				{
-					var data = res._getData();
-					assert.equal(res.statusCode, 200);
-					assert(data);
-					done();
-				});
-			});
-		});
-		
-		it('setInitPositionOfCharacter', function(done)
-		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-			
-			req.body.roomId = "room";
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.body.roomId = "room";
-				req.body.characterName = 'tester';
-				
-				battleRoute.getControlId(req, res, null, function()
-				{
-					var data = res._getData();
-					var result = battle.setInitPositionOfCharacter("room", data);
-
-					assert.equal(result.x, 0);
-					assert.equal(result.x, 0);
-					
-					done();
-				});
-			});
-		});
-		
-		it('getCharacterPosition', function(done)
-		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-			
-			req.body.roomId = "room";
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.body.roomId = "room";
-				req.body.characterName = 'tester';
-				
-				battleRoute.getControlId(req, res, null, function()
-				{
-					var data = res._getData();
-					battle.setInitPositionOfCharacter("room", data);
-					
-					req = httpMocks.createRequest();
-					res = httpMocks.createResponse();
-					
-					req.body.roomId = "room";
-					req.body.controlId = data;
-					battleRoute.getCharacterPosition(req, res, null, function()
-					{
-						var result = res._getData();
-						assert.equal(result.x, 0);
-						assert.equal(result.x, 0);
-						
-						done();
-					});
-					
-				});
-			});
-		});
-		
-		it('getMapData', function(done)
-		{
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-
-			req.body.roomId = "room";
-			req.body.character = {hp : 100, mp : 100, name : 'tester'};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				var result = battle.getMapData("room");
-				assert(result instanceof Array);
-				
-				done();
-			});
+			done();
 		});
 	});
 	
-	describe('Battle logic', function()
+	it('createDungeon', function(done)
 	{
-		var roomId = 'room';
-		var characterName = 'tester';
-		var controlId = null;
-		beforeEach(function(done)
-		{
-			battle.clearRoom();
-			
-			var req = httpMocks.createRequest();
-			var res = httpMocks.createResponse();
-			
-			req.body.roomId = roomId;
-			req.body.character = {hp : 100, mp : 100, attackRange : 1, attackPoint : 10, moveSpeed : 1, name : 'tester', skills : [1]};
-			battleRoute.joinBattleRoom(req, res, null, function()
-			{
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.body.roomId = roomId;
-				req.body.characterName = characterName;
-				
-				battleRoute.getControlId(req, res, null, function()
-				{
-					controlId = res._getData();
-					battle.setInitPositionOfCharacter("room", controlId);
-					done();
-				});
-			});
-		});
+		var req = httpMocks.createRequest();
+		var res = httpMocks.createResponse();
 		
-		it('Move character', function()
-		{
-			var result = battle.getCharacterPosition(roomId, controlId);
-			assert.equal(result.x, 0);
-			assert.equal(result.y, 0);
-			
-			battle.moveCharacter(roomId, controlId, 'e');
-			var result = battle.getCharacterPosition(roomId, controlId);
-			
-			assert.equal(result.x, 1);
-			assert.equal(result.y, 0);
-		});
+		req.body.mapNumber = 1;
 		
-		it('Cast skill 1', function(done)
+		dungeonModule.createDungeonInstance(req, res, null, function()
 		{
-			var target = {hp : 100, mp : 100, name : 'monster'};
-			target.position = {x : 1, y : 1};
-			battle.createCharacter(roomId, target);
+			var data = res._getData();
+			assert.equal(res.statusCode, 201);
+			assert(data);
 			
-			var skillId = 1;
-			battle.moveCharacter(roomId, controlId, 'e');
-			battle.moveCharacter(roomId, controlId, 'e');
-			battle.moveCharacter(roomId, controlId, 's');
-			battle.castSkill(roomId, controlId, target, skillId, function(result)
-			{
-				assert(result, true);
-				
-				battle.moveCharacter(roomId, controlId, 's');
-				battle.moveCharacter(roomId, controlId, 'w');
-				battle.castSkill(roomId, controlId, target, skillId, function(result)
-				{
-					assert(result, false);
-					
-					done();
-				});
-				
-				assert(battle.moveCharacterForce(roomId, target.position, {x : 2, y : 1}), true);
-			});
+			done();
 		});
 	});
 });

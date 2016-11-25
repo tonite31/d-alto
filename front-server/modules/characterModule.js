@@ -45,21 +45,12 @@ module.exports.getMyCharacters = function(req, res, next)
 	});
 };
 
-module.exports.getCharacter = function(req, callback)
+module.exports.getCharacter = function(username, characterId, callback)
 {
 	var testCallback = arguments[3];
 	
-	if(!req.session.username)
-	{
-		res.status(401).end();
-		if(callback)
-			callback();
-		
-		return;
-	}
-	
 	var options = {};
-	options.url = DATA_SERVER_HOST + '/characters/' + req.session.username + '/' + req.body.characterId;
+	options.url = DATA_SERVER_HOST + '/characters/' + username + '/' + characterId;
 	options.method = 'GET';
 	
 	request(options, function(err, response, data)

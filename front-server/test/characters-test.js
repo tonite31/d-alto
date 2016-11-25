@@ -114,16 +114,16 @@ describe('Characters test', function()
 				assert.equal(res.statusCode, 201);
 				assert(data._id);
 				
-				req = httpMocks.createRequest();
-				res = httpMocks.createResponse();
-				
-				req.session = {username : 'tester'};
-				req.body.characterId = data._id;
-				
-				characterModule.getCharacter(req, function(code, data)
+				characterModule.getCharacter('tester', data._id, function(code, data)
 				{
 					assert.equal(code, 200);
 					assert(data);
+					
+					req = httpMocks.createRequest();
+					res = httpMocks.createResponse();
+					
+					req.session = {username : 'tester'};
+					req.body.characterId = data._id;
 					
 					characterModule.deleteCharacter(req, res, null, function(data)
 					{

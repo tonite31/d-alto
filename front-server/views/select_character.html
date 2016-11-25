@@ -7,11 +7,31 @@
 	<td>{attackPoint}</td>
 	<td>{attackRange}</td>
 	<td>{moveSpeed}</td>
-	<td><button type="button">접속</button></td>
+	<td><button type="button" data-id="{_id}">접속</button></td>
 </tr>
 </script>
 
 <script>
+var connect = function(id)
+{
+	$.ajax({url : '/connect/' + id}).done(function(data)
+	{
+		if(data == 'connected')
+		{
+			//이동
+			location.href = '/battle/' + data.dungeonId;
+		}
+		else if(data == 'created_dungeon')
+		{
+			connect(id);
+		}
+			
+	}).fail(function(error)
+	{
+		console.log(error);
+	});	
+};
+
 $(document).ready(function()
 {
 	$.ajax({url : '/api/getMyCharacter'}).done(function(data)
@@ -27,6 +47,15 @@ $(document).ready(function()
 			
 			$('#charactersTable tbody').append(template.replace('{number}', i+1));
 		}
+		
+		$('#charactersTable tbody button').on('click', function()
+		{
+			//원래는 파티장은 맵 넘버를 가지고 던전 생성을 한 후 결과가 오면 그 아이디로 접속.
+			//파티원들은 그 이후 아이디를 전달받아 접속.
+// 			var id = $(this).attr('data-id');
+// 			connect(id);
+		});
+		
 	}).fail(function(error)
 	{
 		alert(error);	

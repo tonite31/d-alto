@@ -4,7 +4,7 @@ var battleManager = {};
 
 (function()
 {
-	var dungeonIndex = -1;
+	var dungeonIndex = 0;
 	var dungeonList = {};
 	
 	this.createDungeonInstance = function(mapNumber)
@@ -29,6 +29,7 @@ var battleManager = {};
 		
 		//맵에서 초기 위치를 받아와서 세팅, 초기위치는 랜덤으로 해줌.
 		character.position = dungeonList[dungeonId].mapData.initialPosition[0];
+		dungeonList[dungeonId].mapData.map[character.position.y][character.position.x] = character;
 		character.type = 'user';
 		
 		var controlId = new Date().getTime();
@@ -95,7 +96,7 @@ var battleManager = {};
 		if(character.position.y >= 0 && character.position.x >= 0 && character.position.y < map.length && character.position.x < map[0].length)
 		{
 			var target = map[character.position.y][character.position.x];
-			if(!target || target.type == 'user')
+			if(!target)
 			{
 				map[character.position.y][character.position.x] = character;
 				map[originPosition.y][originPosition.x] = 0;

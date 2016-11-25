@@ -1,6 +1,11 @@
 {
 	"server" :
 	{
+		"world-server" :
+		{
+			"host" : "localhsot",
+			"port" : 9000
+		},
 		"front-server" :
 		{
 			"host" : "localhost",

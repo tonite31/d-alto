@@ -1,6 +1,9 @@
 var assert = require('assert');
-
+var httpMocks = require('node-mocks-http');
+var request = require('request');
 var io = require('socket.io-client');
+
+var battleManager = require('../modules/battleManager');
 
 var config = require('../../../config');
 
@@ -36,24 +39,19 @@ describe('Battle connection test', function()
 	
 	it('createDungeonInstance', function(done)
 	{
-		if(conn)
+		request({url : 'http://localhost:9004/dungeons/instance', method : 'post', form : {mapNumber : 0}}, function(error, response, data)
 		{
-			conn.on('CREATE_DUNGEON_INSTANCE', function(res)
+			if(error)
 			{
-				assert.equal(res.statusCode, 201);
-				assert(typeof res.data.dungeonId == 'number');
-				
-				dungeonId = res.data.dungeonId;
-				
+				console.log(error);
+			}
+			else
+			{
+				assert(data);
+				dungeonId = data;
 				done();
-			});
-			
-			conn.emit('CREATE_DUNGEON_INSTANCE', {mapNumber : 0});
-		}
-		else
-		{
-			done();
-		}
+			}
+		});
 	});
 	
 	it('joinDungeonInstance', function(done)
@@ -62,6 +60,7 @@ describe('Battle connection test', function()
 		{
 			conn.on('JOIN_DUNGEON_INSTANCE', function(res)
 			{
+				assert(!res.message);
 				assert.equal(res.statusCode, 200);
 				assert(res.data.controlId);
 				assert(res.data.mapData.map instanceof Array);
@@ -101,24 +100,4 @@ describe('Battle connection test', function()
 			done();
 		}
 	});
-	
-//	it('move character', function(done)
-//	{
-//		if(conn)
-//		{
-//			conn.on('MOVE_CHARACTER', function(res)
-//			{
-//				assert.equal(res.statusCode, 200);
-//				assert.equal(res.characterId, 'test');
-//				assert.equal(res.x, 0);
-//				
-//				done();
-//			});
-//			conn.emit('MOVE_CHARACTER', {characterId : 'test', controlId : 'test', direction : 'e'});
-//		}
-//		else
-//		{
-//			done();
-//		}
-//	});
 });

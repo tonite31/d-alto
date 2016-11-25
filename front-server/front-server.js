@@ -151,48 +151,40 @@ require('./routers/characterRouter')(app);
 ////--------------------------------------------------------
 //
 //
-//var io = require('socket.io')(server);
-//io.use(function(socket, next)
-//{
-//	sessionMiddleware(socket.request, socket.request.res, next);
-//});
-//
-//io.on('connection', function(client)
-//{
-//	var battleData = client.request.session.battle;
-//	if(battleData)
-//	{
-//		var battleClient = battleSession[battleData.controlId];
-//		
-//		battleClient.emit('GET_MAP_DATA', battleData.roomId);
-//		battleClient.on('GET_MAP_DATA', function(result)
-//		{
-//			client.emit('GET_MAP_DATA', result);
-//		});
-//		
-//		battleClient.emit('INIT_CHARACTER_POSITION', battleData);
-//		battleClient.on('INIT_CHARACTER_POSITION', function(result)
-//		{
-//			if(typeof result == 'object')
-//			{
-//				client.request.session.character.position = result;
-//				client.emit('INIT_CHARACTER_POSITION', client.request.session.character);
-//			}
-//			else if(result != false)
-//			{
-//				client.emit('INIT_CHARACTER_POSITION', null);
-//			}
-//		});
-//		
-//		battleClient.on('MOVE_CHARACTER', function(result)
-//		{
-//			result.name = client.request.session.character.name;
-//			client.emit('MOVE_CHARACTER', result);
-//		});
-//		
-//		client.on('MOVE_CHARACTER', function(data)
-//		{
+var battleModule = require('./modules/battleModule');
+var io = require('socket.io')(server);
+io.use(function(socket, next)
+{
+	sessionMiddleware(socket.request, socket.request.res, next);
+});
+
+io.on('connection', function(client)
+{
+	if(req.session.socketTimeout)
+	{
+		clearTimeout(req.session.socketTimeout);
+		req.session.socketTimeout = null;
+	}
+	
+	var conn = battleModule.connections[client.request.session.userCharacterId];
+	var character = req.session.character[client.request.session.userCharacterId];
+	if(conn)
+	{
+		var dungeonId = character.dungeonId;
+		var controlId = character.controlId;
+		
+		client.on('MOVE_CHARACTER', function(data)
+		{
+			conn.moveCharacter(dungeonId, controlId, data);
 //			battleClient.emit('MOVE_CHARACTER', {roomId : battleData.roomId, controlId : battleData.controlId, direction : data});
-//		});
-//	}
-//});
+		});
+	}
+	
+	client.on('disconnect', function()
+	{
+		req.session.socketTimeout = setTimeout(function()
+		{
+			conn.disconnect();
+		}, 5000);
+	});
+});

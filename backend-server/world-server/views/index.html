@@ -1,0 +1,74 @@
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+.character
+{
+	position: absolute;
+	
+	width: 60px;
+	height: 130px;
+	
+	background-image: url('/views/제목 없음.png');
+}
+</style>
+
+<script id="character" type="text/template">
+<div class="character"></div>
+</script>
+<script>
+var socket = io.connect();
+socket.on('MOVE_CHARACTER', function(data)
+{
+	var id = data.id;
+	var position = data.position;
+	
+	$('#' + id).css('left', (position.x * 30) + 'px').css('top', (position.y * 30) + 'px');
+});
+		
+socket.on('CONNECTION', function(data)
+{
+	var map = data.map;
+	
+	for(var i=0; i<100; i++)
+	{
+		for(var j=0; j<100; j++)
+		{
+			if(map[i][j])
+			{
+				var position = map[i][j].position;
+				var x = position.x;
+				var y = position.y;
+				var template = $('#character').html();
+				template = $(template);
+				template.attr('id', map[i][j].id).css('left', x * 30 + 'px').css('top', y * 30 + 'px');
+				
+				$('#map').append(template);
+			}
+		}
+	}
+});
+
+$(window).on('keydown', function(e)
+{
+	var keyCode = e.keyCode;
+	if(keyCode == 68)
+	{
+		socket.emit('MOVE_CHARACTER', 'e');
+	}
+	else if(keyCode == 83)
+	{
+		socket.emit('MOVE_CHARACTER', 's');
+	}
+	else if(keyCode == 65)
+	{
+		socket.emit('MOVE_CHARACTER', 'w');
+	}
+	else if(keyCode == 87)
+	{
+		socket.emit('MOVE_CHARACTER', 'n');
+	}
+});
+</script>
+
+<div id="map">
+</div>

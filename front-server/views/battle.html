@@ -32,74 +32,93 @@ var drawCharacter = function(character)
 		$('#map').append(template);
 	}
 };
+</script>
 
-var id = null;
-var socket = io.connect();
-socket.on('connect', function()
-{
-    socket.emit('joinRoom','test_room');
-});
+<script>
+var mapData = null;
 
-socket.on('GET_MAP_DATA', function(map)
+var setup = function()
 {
-	try
-	{
-		for(var i=0; i<map.length; i++)
-		{
-			for(var j=0; j<map.length; j++)
-			{
-				if(typeof map[j][i] == 'object')
-				{
-					console.log("오브오브");
-					if(map[j][i].type == 'user')
-					{
-						drawCharacter(map[j][i]);
-					}
-				}
-			}
-		}	
-	}
-	catch(err)
-	{
-		console.log(err);
-	}
-});
-
-socket.on('INIT_CHARACTER_POSITION', function(result)
-{
-	drawCharacter(result);
-});
-
-socket.on('MOVE_CHARACTER', function(result)
-{
-	if(result)
-	{
-		console.log(result);
-		$('#' + result.name).css('left', result.x * 50).css('top', result.y * 50);
-	}
-});
-
-$(window).on('keydown', function(e)
-{
-	var keyCode = e.keyCode;
-	console.log(keyCode);
+	console.log("맵데이터 : ", mapData);
 	
-	if(keyCode == 68)
-	{
-		socket.emit('MOVE_CHARACTER', 'e');
-	}
-	else if(keyCode == 83)
-	{
-		socket.emit('MOVE_CHARACTER', 's');
-	}
-	else if(keyCode == 65)
-	{
-		socket.emit('MOVE_CHARACTER', 'w');
-	}
-	else if(keyCode == 87)
-	{
-		socket.emit('MOVE_CHARACTER', 'n');
-	}
+// 	var id = null;
+// 	var socket = io.connect();
+// 	socket.on('connect', function()
+// 	{
+		
+// 	});
+
+// 	socket.on('GET_MAP_DATA', function(map)
+// 	{
+// 		try
+// 		{
+// 			for(var i=0; i<map.length; i++)
+// 			{
+// 				for(var j=0; j<map.length; j++)
+// 				{
+// 					if(typeof map[j][i] == 'object')
+// 					{
+// 						console.log("오브오브");
+// 						if(map[j][i].type == 'user')
+// 						{
+// 							drawCharacter(map[j][i]);
+// 						}
+// 					}
+// 				}
+// 			}	
+// 		}
+// 		catch(err)
+// 		{
+// 			console.log(err);
+// 		}
+// 	});
+
+// 	socket.on('INIT_CHARACTER_POSITION', function(result)
+// 	{
+// 		drawCharacter(result);
+// 	});
+
+// 	socket.on('MOVE_CHARACTER', function(result)
+// 	{
+// 		if(result)
+// 		{
+// 			console.log(result);
+// 			$('#' + result.name).css('left', result.x * 50).css('top', result.y * 50);
+// 		}
+// 	});
+
+// 	$(window).on('keydown', function(e)
+// 	{
+// 		var keyCode = e.keyCode;
+// 		console.log(keyCode);
+		
+// 		if(keyCode == 68)
+// 		{
+// 			socket.emit('MOVE_CHARACTER', 'e');
+// 		}
+// 		else if(keyCode == 83)
+// 		{
+// 			socket.emit('MOVE_CHARACTER', 's');
+// 		}
+// 		else if(keyCode == 65)
+// 		{
+// 			socket.emit('MOVE_CHARACTER', 'w');
+// 		}
+// 		else if(keyCode == 87)
+// 		{
+// 			socket.emit('MOVE_CHARACTER', 'n');
+// 		}
+// 	});
+};
+
+$.ajax({url : '/battle/getMapData'}).done(function(data)
+{
+	mapData = data;
+	setup();
+	
+}).fail(function(error)
+{
+	console.log(error);	
 });
 </script>
 

@@ -4,31 +4,7 @@ var ioClient = require('socket.io-client');
 
 const BATTLE_SERVER_HOST = 'http://' + config.server['battle-server'].host + ':' + config.server['battle-server'].port;
 
-module.exports.getMapData = function(req, res, next)
-{
-	var callback = arguments[3];
-	
-	var options = {};
-	options.url = BATTLE_SERVER_HOST + '/dungeons/' + req.body.dungeonId + '/map';
-	options.method = 'GET';
-	
-	request(options, function(error, response, data)
-	{
-		if(error)
-		{
-			console.log(error);
-			throw new Error(error);
-		}
-		else
-		{
-			res.status(response.statusCode).send(data ? data : null);
-			
-			if(callback)
-				callback();
-		}
-	});
-};
-
+module.exports.connections = {};
 module.exports.connection = (function()
 {
 	var callbacksForTest = {};
@@ -65,7 +41,7 @@ module.exports.connection = (function()
 		if(callbacksForTest.JOIN_DUNGEON_INSTANCE)
 			callbacksForTest.JOIN_DUNGEON_INSTANCE(res);
 		
-		if(res.data.controlId && res.data.mapData)
+		if(res.data && res.data.controlId && res.data.mapData)
 		{
 			
 		}

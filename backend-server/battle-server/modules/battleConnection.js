@@ -6,21 +6,6 @@ var _connectionManager = {};
 (function()
 {
 	var modules = {};
-	modules.CREATE_DUNGEON_INSTANCE = function(response, data)
-	{
-		if(data.mapNumber == null)
-		{
-			response({statusCode : 404, message : 'mapNumber_not_found'});
-			return;
-		}
-		
-		var dungeonId = battleManager.createDungeonInstance(data.mapNumber);
-		this.client.join(dungeonId);
-		this.currentDungeonId = dungeonId;
-		
-		response({statusCode : 201, data : {dungeonId : dungeonId}});
-	};
-	
 	modules.JOIN_DUNGEON_INSTANCE = function(response, data)
 	{
 		//아무나 접속할 수 없게 처리해야한다.
@@ -39,6 +24,12 @@ var _connectionManager = {};
 		
 		var dungeonId = data.dungeonId;
 		var controlId = battleManager.joinDungeonInstance(dungeonId, data.character);
+		if(controlId == 'dungeon_not_found')
+		{
+			response({statusCode : 404, message : 'dungeon_not_found'});
+			return;
+		}
+		
 		if(controlId)
 		{
 			response({statusCode : 200, data : {controlId : controlId, mapData : battleManager.getMapData(dungeonId)}});

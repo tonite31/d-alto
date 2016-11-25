@@ -1,7 +1,6 @@
 var assert = require('assert');
 var httpMocks = require('node-mocks-http');
 
-var battleModule = require('../modules/battleModule');
 
 var config = require('../../config');
 
@@ -23,84 +22,6 @@ describe('Battle test', function()
 	//move character //join 한 후에는 controlId를 이용해서 캐릭터를 움직일 수 있음.
 	describe('Battle logic', function()
 	{
-		var dungeonId = null;
-		var controlId = null;
-		var conn = null;
 		
-		var character = {_id :'tester', name : 'tester', hp: 10, mp: 10, moveSpeed : 1, attackRange : 1, attackPoint : 10};
-		
-		before(function()
-		{
-			var Connection = battleModule.connection;
-			conn = new Connection();
-		});
-		
-		after(function()
-		{
-			if(conn)
-				conn.disconnect();
-		});
-		
-		it('create dungeon instance', function(done)
-		{
-			if(conn)
-			{
-				conn.createDungeonInstance(0, function(res)
-				{
-					assert.equal(res.statusCode, 201);
-					assert(typeof res.data.dungeonId == 'number');
-					
-					dungeonId = res.data.dungeonId;
-					
-					done();
-				});
-			}
-			else
-			{
-				done();
-			}
-		});
-		
-		it('join dungeon instance', function(done)
-		{
-			if(conn)
-			{
-				conn.joinDungeonInstance(dungeonId, character, function(res)
-				{
-					assert(!res.message);
-					assert.equal(res.statusCode, 200);
-					assert(res.data.controlId);
-					assert(res.data.mapData.map instanceof Array);
-					
-					controlId = res.data.controlId;
-					
-					done();
-				});
-			}
-			else
-			{
-				done();
-			}
-		});
-		
-		it('move character', function(done)
-		{
-			if(conn)
-			{
-				conn.moveCharacter(dungeonId, controlId, 'e', function(res)
-				{
-					assert.equal(res.statusCode, 200);
-					assert.equal(res.data.characterId, 'tester');
-					assert(typeof res.data.position.x == 'number');
-					assert(typeof res.data.position.y == 'number');
-					
-					done();
-				});
-			}
-			else
-			{
-				done();
-			}
-		});
 	});
 });

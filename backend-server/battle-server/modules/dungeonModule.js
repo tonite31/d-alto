@@ -135,3 +135,25 @@ module.exports.getMapData = function(req, res, next)
 		}
 	});
 };
+
+var battleManager = require('./battleManager');
+module.exports.createDungeonInstance = function(req, res, next)
+{
+	var callback = arguments[3];
+	
+	var mapNumber = req.body.mapNumber;
+	if(!mapNumber)
+	{
+		res.status(500).end('map_number_not_found');
+		if(callback)
+			callback();
+		return;
+	}
+	
+	var dungeonId = battleManager.createDungeonInstance(mapNumber);
+	
+	res.status(201).end(dungeonId + "");
+	
+	if(callback)
+		callback();
+};
