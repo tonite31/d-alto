@@ -75,7 +75,7 @@ process.on('uncaughtException', function (err)
 
 
 var world = require('./modules/world');
-var characterModule = require('./modules/character');
+var object = require('./modules/object');
 
 var characters = {};
 
@@ -116,10 +116,19 @@ io.on('connection', function(client)
 	//캐릭터의 움직임.
 	client.on('MOVE_CHARACTER', function(direction)
 	{
-		if(characterModule.move(world, character, direction))
+		var tempObject = object.move(character, direction);
+		
+		if(world.checkObjectMovable(world.getMap(), tempObject))
 		{
-			client.emit('MOVE_CHARACTER', {character : character, direction : direction});
+			character.property.prevPosition = character.property.position;
+			character.property.position = tempObject.property.position;
+			
+			delete tempObject;
+			//이건 일단 보류 스크롤을 위한 emit이다.
+//			client.emit('MOVE_CHARACTER', {character : character, direction : direction});
 		}
+		
+		
 //		var tc = JSON.parse(JSON.stringify(character));
 //		
 //		if(direction == 'right')

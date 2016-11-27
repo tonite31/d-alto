@@ -33,6 +33,21 @@ module.exports = (function()
 			return self;
 		};
 		
+		this.move = function(o, direction)
+		{
+			var tempObject = JSON.parse(JSON.stringify(o));
+			if(direction == 'left')
+				tempObject.property.position.x -= o.stat.moveSpeed;
+			else if(direction == 'right')
+				tempObject.property.position.x += o.stat.moveSpeed;
+			else if(direction == 'up')
+				tempObject.property.position.y -= o.stat.moveSpeed;
+			else if(direction == 'down')
+				tempObject.property.position.y += o.stat.moveSpeed;
+			
+			return tempObject;
+		};
+		
 	}).call(object);
 	
 	return object;

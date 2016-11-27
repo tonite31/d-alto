@@ -9,32 +9,38 @@ var canvasMapId = '#canvasMap';
 (function()
 {
 	var canvasImages = {};
+	var objectImage = null;
+	
+	var myCharacter = null;
 	
 	//접속하면 소켓이 생성된다.
 	var socket = io.connect();
 	socket.on('CONNECTED', function(data)
 	{
-		var map = data.map;
-		var myCharacter = data.character;
-		
-		$(document).ready(function()
+		this.loadImages(function()
 		{
-			$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
-			$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
-			this.createMap(map);
-			this.bindKeyboardAction();
-		}.bind(this));
-//		
-//		myun.setCharacter(data.character);
-//		myun.setMapSize(map);
-//		//접속하면 그 당시 맵의 정보를 받아온다.
-//		myun.drawMap(map);
-//		myun.setInitialScroll();
-//		
-//		$(mapId).css('width', map.size.width).css('height', map.size.height);
-//		
-//		//이 다음캐릭터를 스크린 가운데로 오게 만든다.
-//		//새로고침 하면 일단 0, 0 인 상태로 보일테니까.
+			var map = data.map;
+			myCharacter = data.character;
+			
+			$(document).ready(function()
+			{
+				$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
+				$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
+				this.createMap(map);
+				this.bindKeyboardAction();
+			}.bind(this));
+
+//			myun.setCharacter(data.character);
+//			myun.setMapSize(map);
+//			//접속하면 그 당시 맵의 정보를 받아온다.
+//			myun.drawMap(map);
+//			myun.setInitialScroll();
+//			
+//			$(mapId).css('width', map.size.width).css('height', map.size.height);
+//			
+//			//이 다음캐릭터를 스크린 가운데로 오게 만든다.
+//			//새로고침 하면 일단 0, 0 인 상태로 보일테니까.
+		});
 	}.bind(this));
 	
 	socket.on('UPDATE_MAP', function(map)
@@ -42,61 +48,61 @@ var canvasMapId = '#canvasMap';
 		this.updateMap(map);
 	}.bind(this));
 	
+	this.loadImages = function(callback)
+	{
+		objectImage = new Image();
+		objectImage.src = '/views/images/object/object1.png';
+		objectImage.onload = function()
+		{
+			callback();
+		};
+	};
+	
 	this.createMap = function(map)
 	{
+		var canvas = $(canvasMapId).get(0);
+		var context = canvas.getContext('2d');
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		
 		for(var i=0; i<map.objects.length; i++)
 		{
 			var object = map.objects[i];
-			
-			//움직이는 오브젝트는 element로 아닌 애들은 canvas로
+			var props = object.property;
+			if(props.movable || props.interactive)
+			{
+				//움직이거나 상호작용이 필요한 아이들.
+				var x = props.position.x;
+				var y = props.position.y;
+				
+				var template = '<div class="object"><div class="object-image"></div></div>';
+				template = $(template);
+				template.attr('id', object.id)
+				.css('transform', 'translate(' + x + 'px, ' + y + 'px)')
+				.css('width', props.collisionSize.width + 'px')
+				.css('height', props.collisionSize.height + 'px')
+				.children('div')
+				.css('background-image', 'url(/views/images/' + props.image + ')')
+				.css('width', props.size.width + 'px')
+				.css('height', props.size.height + 'px');
+				
+				if(object.id.indexOf('npc-') != -1)
+					template.addClass('npc');
+				
+				$(mapId).append(template);
+			}
+			else
+			{
+				//움직이지 않고 상호작용도 필요 없는 아이들.
+				(function(object)
+				{
+					var props = object.property;
+					var cx = props.position.x;
+					var cy = props.position.y - (props.size.height - props.collisionSize.height);
+				
+					context.drawImage(objectImage, cx, cy);
+				})(object);
+			}
 		}
-//		for(var i=0; i<map.movableObjects.length; i++)
-//		{
-//			var object = map.movableObjects[i];
-//			
-//			var x = object.position.x;
-//			var y = object.position.y;
-//			
-//			var template = '<div class="object"><div class="object-image"></div></div>';
-//			template = $(template);
-//			template.attr('id', object.id)
-//			.css('transform', 'translate(' + x + 'px, ' + y + 'px)')
-//			.css('width', object.collisionSize.width + 'px')
-//			.css('height', object.collisionSize.height + 'px')
-//			.children('div')
-//			.css('background-image', 'url(/views/images/' + object.type + ')')
-//			.css('width', object.size.width + 'px')
-//			.css('height', object.size.height + 'px');
-//			
-//			if(object.id.indexOf('npc-') != -1)
-//				template.addClass('npc');
-//			
-//			$(mapId).append(template);
-//		}
-//		
-//		
-//		var canvas = $(canvasMapId).get(0);
-//		var context = canvas.getContext('2d');
-//		context.clearRect(0, 0, canvas.width, canvas.height);
-//		
-//		for(var i=0; i<map.nonMovableObjects.length; i++)
-//		{
-//			var object = map.nonMovableObjects[i];
-//			(function(object)
-//			{
-//				var image = new Image();
-//				image.src = '/views/images/' + object.type;
-//				
-//				image.onload = function()
-//				{
-//					var cx = object.position.x;
-//					var cy = object.position.y - (object.size.height - object.collisionSize.height);
-//					context.drawImage(image, cx, cy);
-//					
-//					canvasImages[object.id] = image;
-//				};
-//			})(object);
-//		}
 	};
 	
 	this.updateMap = function(map)
@@ -106,25 +112,29 @@ var canvasMapId = '#canvasMap';
 		var context = canvas.getContext('2d');
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		
-//		for(var i=0; i<map.movableObjects.length; i++)
-//		{
-//			var object = map.movableObjects[i];
-//			
-//			var x = object.position.x;
-//			var y = object.position.y;
-//			
-//			$('#' + object.id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
-//		}
-//		
-//		for(var i=0; i<map.nonMovableObjects.length; i++)
-//		{
-//			var object = map.nonMovableObjects[i];
-//			var cx = object.position.x;
-//			var cy = object.position.y - (object.size.height - object.collisionSize.height);
-//			
-//			if(canvasImages[object.id])
-//				context.drawImage(canvasImages[object.id], cx, cy);
-//		}
+		var objects = map.objects;
+		for(var i=0; i<objects.length; i++)
+		{
+			var object = objects[i];
+
+			var props = object.property;
+			
+			if(props.movable || props.interactive)
+			{
+				var x = props.position.x;
+				var y = props.position.y;
+				
+				$('#' + object.id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
+			}
+//			else
+//			{
+//				var cx = props.position.x;
+//				var cy = props.position.y - (props.size.height - props.collisionSize.height);
+//
+//				if(canvasImages[object.id])
+//					context.drawImage(canvasImages[object.id], cx, cy);	
+//			}
+		}
 	};
 	
 	this.bindKeyboardAction = function()
