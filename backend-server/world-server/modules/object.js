@@ -7,17 +7,28 @@ module.exports = (function()
 	
 	(function()
 	{
-		this.createObject = function(maxPosition)
+		this.create = function()
 		{
 			var self = {};
-			self.id = 'object-' + uuid.v4();
-			self.position = {x : random.integer(0, maxPosition.x), y : random.integer(0, maxPosition.y)};
-			self.type = 'object/object1.png';
-			self.collision = true;
-			self.collisionSize = {width: 100, height: 60};
-			self.size = {width: 114, height: 104};
-			self.interactive = false;
-			self.movable = false;
+			self.id = uuid.v4();
+			
+			//시스템 로직을 위해 필요한 값들.
+			self.property = {
+				collision : true, //충돌 체크 할것인지.
+				interactive : false, //사용자와 상호작용 할것인지.
+				movable : false, //이동 가능한 녀석인지.
+				size : {width: 0, height: 0}, //오브젝트의 실제 크기
+				collisionSize : {width: 0, height: 0}, //충돌체크할때 쓸 사이즈
+				position : {x : 0, y : 0}, //오브젝트의 위치
+				prevPosition : {x : 0, y : 0}, //오브젝트의 이전 위치
+				image : '' //이미지 주소
+			};
+			
+			//캐릭터의 스탯.
+			self.stat = {
+				moveSpeed : 1
+			};
+			
 			
 			return self;
 		};

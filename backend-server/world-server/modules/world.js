@@ -1,5 +1,5 @@
 var object = require('./object');
-var character = require('./character');
+//var character = require('./character');
 var random = require("random-js")();
 
 module.exports = (function()
@@ -10,32 +10,43 @@ module.exports = (function()
 	var testObjectCount = 10;
 	var testNpcCount = 10;
 	var testDirections = ['left', 'right', 'up', 'down'];
+	var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
+	var npcSpeed = {min : 10, max : 50};
 	
-	var maps = {}; // 영구적으로 살아있는 월드
-	var instantMaps = {};
-	var users = {}; // 전체 유저
+	var maps = {}; // 영구적으로 살아있는 맵.
+	var instantMaps = {}; //인스턴트 맵.
+	var users = {}; // 이 서버에 접속중인 전체 유저.
 	
 	(function()
 	{
+		//테스트용 함수?
 		this.createCharacter = function()
 		{
 			try
 			{
-				var c = character.create();
+				var c = object.create();
 				users[c.id] = c;
+				
+				var props = c.property;
 				
 				do
 				{
-					//캐릭터의 위치를 임의로 설정한다.
-					c.position.x = random.integer(0, 100);
-					c.position.y = random.integer(0, 100);
-					c.prevPosition.x = c.position.x;
-					c.prevPosition.y = c.position.y;
+					//최초 캐릭터의 위치를 임의로 설정한다.
+					props.position.x = random.integer(0, 100);
+					props.position.y = random.integer(0, 100);
+					props.prevPosition.x = props.position.x;
+					props.prevPosition.y = props.position.y;
+					
+					props.image = '/character/cha_ass_m.gif';
+					
+					props.movable = true;
+					props.interactive = true;
+					props.collision = true;
+					
 				}while(!this.checkObjectMovableInMap(maps[testMapId], c));
 				
 				//캐릭터의 최초 위치를 맵에 등록.
 				maps[testMapId].objects.push(c);
-				
 				return c;
 			}
 			catch(err)
@@ -100,14 +111,16 @@ module.exports = (function()
 		{
 			try
 			{
+				var props = target.property;
 				//가장먼저 맵 밖으로 벗어나는지를 체크 해야한다.
-				if(target.position.x < 0 || target.position.x + target.collisionSize.width > map.size.width || target.position.y < 0 || target.position.y + target.collisionSize.height > map.size.height)
+				if(props.position.x < 0 || props.position.x + props.collisionSize.width > map.size.width || props.position.y < 0 || props.position.y + props.collisionSize.height > map.size.height)
 					return false;
 				
-				var mo = map.objects;
-				for(var i=0; i<mo.length; i++)
+				var objects = map.objects;
+				for(var i=0; i<objects.length; i++)
 				{
-					if(target.id != mo[i].id && this.moveCollisionCheck(target, mo[i]))
+					//대상 오브젝트를 제외하고 나머지 오브젝트들과 충돌체크를 해서 이동이 가능한지. 알아본다.
+					if(target.id != objects[i].id && this.moveCollisionCheck(props, objects[i].property))
 					{
 						return false;
 					}
@@ -140,44 +153,40 @@ module.exports = (function()
 			objects : []
 		};
 		
-		var checkCollision = function(target)
+		for(var i=0; i<testObjectCount + testNpcCount; i++)
 		{
-			if(target.position.x < 0 || target.position.x + target.collisionSize.width > maps[id].size.width || target.position.y < 0 || target.position.y + target.collisionSize.height > maps[id].size.height)
-				return true;
+			var o = object.create();
+			var props = o.property;
+			props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
 			
-			for(var j=0; j<maps[id].objects.length; j++)
+			if(i < testNpcCount)
 			{
-				if(target.id != maps[id].objects[j].id && world.moveCollisionCheck(target, maps[id].objects[j]))
-				{
-					return true;
-				}
+				props.image = '/object/object1.png';
+				props.movable = false;
+				props.interactive = false;
+				props.collision = true;
+				
+				o.id = 'object-' + o.id;
 			}
-			
-			return false;
-		};
-		
-		for(var i=0; i<testObjectCount; i++)
-		{
-			var o = object.createObject({x : maps[id].size.width, y : maps[id].size.height});
-			if(checkCollision(o))
+			else
+			{
+				props.image = testNpcImages[random.integer(0, 3)];
+				props.movable = true;
+				props.interactive = true;
+				props.collision = true;
+				props.moveSpeed = random.integer(npcSpeed.min, npcSpeed.max);
+				
+				o.id = 'npc-' + o.id;
+			}
+
+			//새로 만들지 말고 포지션만 랜덤으로 다시 찍어서 가자.
+			if(!world.checkObjectMovableInMap(maps[id], o))
 			{
 				i--;
 				continue;
 			}
 
 			maps[id].objects.push(o);
-		}
-		
-		for(var i=0; i<testNpcCount; i++)
-		{
-			var npc = character.createNpc({x : maps[id].size.width, y : maps[id].size.height});
-			if(checkCollision(npc))
-			{
-				i--;
-				continue;
-			}
-			
-			maps[id].objects.push(npc);
 		}
 		
 		setInterval(function()
