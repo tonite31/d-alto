@@ -74,40 +74,17 @@ process.on('uncaughtException', function (err)
 
 
 
-
-
-//var row = 100;
-//var col = 100;
-//var map = [];
-//for(var i=0; i<col; i++)
-//{
-//	map[i] = [];
-//}
-//
-//var setCharacterPosition = function(character)
-//{
-//	for(var i=0; i<row; i++)
-//	{
-//		for(var j=0; j<col; j++)
-//		{
-//			if(!map[i][j])
-//			{
-//				map[i][j] = character;
-//				character.position = {x : i, y : j};
-//				return;
-//			}
-//		}
-//	}
-//};
+var world = require('./modules/world');
+var characterModule = require('./modules/character');
 
 var characters = {};
 
 app.get('/', function(req, res, next)
 {
-	if(!req.session.character)
+	if(!req.session.characterId)
 	{
-		req.session.character = {id : new Date().getTime(), position : {x : 0, y : 0}, moveSpeed : 1};
-		characters[req.session.character.id] = req.session.character;
+		//현재 접속한 사용자의 캐릭터 생성 후 저장.
+		req.session.characterId = world.createCharacter().id;
 	}
 	
 	res.render('index');
@@ -124,31 +101,49 @@ io.use(function(socket, next)
 
 io.on('connection', function(client)
 {
-	if(!client.request.session.character)
+	//캐릭터가 생성되어 있어야만 동작.
+	if(!client.request.session.characterId)
 		return;
 	
-	var character = characters[client.request.session.character.id];
+	var character = world.getCharacter(client.request.session.characterId);
 	
-	client.emit('CONNECTED', characters);
+	//접속한 사람은 맵을 한 번 그려야 하므로.
+	client.emit('CONNECTED', {map : world.getMap(), character : character});
+	
+	//나머지 유저들은 접속한 유저의 정보를 받아야 하므로.
 	client.broadcast.emit('USER_CONNECTED', character);
+	
+	//캐릭터의 움직임.
 	client.on('MOVE_CHARACTER', function(direction)
 	{
-		var originPosition = JSON.parse(JSON.stringify(character.position));
-		if(direction == 'right')
-			character.position.x += character.moveSpeed;
-		else if(direction == 'left')
-			character.position.x -= character.moveSpeed;
-		else if(direction == 'down')
-			character.position.y += character.moveSpeed;
-		else if(direction == 'up')
-			character.position.y -= character.moveSpeed;
-		
-//		character.position = originPosition;
-//		io.emit('MOVE_CHARACTER', {id : character.id, position : character.position, direction : direction});
+		if(characterModule.move(world, character, direction))
+		{
+			client.emit('MOVE_CHARACTER', {character : character, direction : direction});
+		}
+//		var tc = JSON.parse(JSON.stringify(character));
+//		
+//		if(direction == 'right')
+//			tc.position.x += character.moveSpeed;
+//		else if(direction == 'left')
+//			tc.position.x -= character.moveSpeed;
+//		else if(direction == 'down')
+//			tc.position.y += character.moveSpeed;
+//		else if(direction == 'up')
+//			tc.position.y -= character.moveSpeed;
+//		
+//		if(world.checkObjectMovableInMap(world.getMap(), tc))
+//		{
+//			//다른 놈들의 움직임은 스크롤링이 필요 없으므로 프레임처리하고 나만 스크롤링을 위해서 항상 처리하는걸로.
+//			character.prevPosition = character.position;
+//			character.position = tc.position;
+//			
+//			client.emit('MOVE_CHARACTER', {character : character, direction : direction});
+//		}
 	});
 	
 	setInterval(function()
 	{
-		io.emit('MOVE_CHARACTER', characters);
+		//매번 다시 그려야 하는것은 일단은 움직이는 오브젝트들이다.
+		io.emit('UPDATE_MAP', world.getMap());
 	}, 1000 / 30); //30프레임
 });

@@ -2,38 +2,35 @@ var assert = require('assert');
 var io = require('socket.io-client');
 var config = require('../../../config');
 
-describe('Battle test', function()
+var random = require("random-js")();
+var world = require('../modules/world');
+var character = require('../modules/character');
+
+describe('Test', function()
 {
-	var conn = null;
-	
-	before(function(done)
+	it('create object test for test', function()
 	{
-		conn = io('http://localhost:' + config.server['world-server'].port);
-		if(conn != null)
-		{
-			conn.on('CONNECTION', function(code)
-			{
-				done();
-			});
-		}
-		else
-		{
-			done();
-		}
+//		var map = world.getMap();
+//		
+//		assert.equal(map.id, 'test');
+//		assert(typeof map.nonMovableObjects[0].position.x == 'number');
 	});
 	
-	after(function()
-	{
-		if(conn)
-		{
-			conn.disconnect();
-		}
-	});
-	
-	it('test', function(done)
-	{
-		
-		
-		done();
-	});
+//	it('random moving', function()
+//	{
+//		var map = world.getMap();
+//		
+//		var npc = character.createNpc({x : map.size.width, y : map.size.height});
+//		map.movableObjects.push(npc);
+//		
+//		assert(typeof npc.position.x == 'number');
+//		
+//		var originPosition = JSON.parse(JSON.stringify(npc.position));
+//		
+//		while(!character.move(world, npc, 'left'));
+//		
+//		assert.equal(npc.position.x, originPosition.x - npc.moveSpeed);
+//		
+//		random.integers({min : 0, max : 3});
+//	});
 });

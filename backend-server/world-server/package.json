@@ -9,9 +9,11 @@
     "express-session": "^1.14.1",
     "method-override": "*",
     "mongoose": "^4.7.0",
+    "random-js": "^1.0.8",
     "redis": "^2.6.2",
     "socket.io": "^1.5.1",
-    "socket.io-client": "^1.6.0"
+    "socket.io-client": "^1.6.0",
+    "uuid": "^3.0.0"
   },
   "devDependencies": {
     "node-mocks-http": "^1.5.4"

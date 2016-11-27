@@ -1,81 +1,82 @@
 <script src="/socket.io/socket.io.js"></script>
+<script src="/views/libs/core.js"></script>
+<script src="/views/libs/myun.js"></script>
 
 <style>
-.character
+body
+{
+	margin: 0;
+	padding: 0;
+}
+
+.object
 {
 	position: absolute;
-	width: 75px;
-	height: 100px;
+	outline: 1px solid #ddd;
+	overflow: visible;
+}
+
+.object > .object-image
+{
+	background-repeat: no-repeat;
+	
+	position: absolute;
+	left: 0;
+	bottom: 0;
+}
+
+.npc
+{
+	transition: all 0.5s;
+}
+
+.map
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	
+	outline: 1px solid #ddd;
+	
+	transition: all 0.05s linear;
+}
+
+.screen
+{
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	
+	overflow: hidden;
+}
+
+#scrollBoundary
+{
+	position: fixed;
+	left: 40%;
+	right: 40%;
+	top: 40%;
+	bottom: 40%;
+	outline: 1px solid #ddd;
 }
 </style>
 
-<script>
-var speed = 10;
-var createCharacter = function(character)
+<!-- 캐릭터, 오브젝트등 -->
+<style>
+.object1
 {
-	var position = character.position;
-	
-	var x = position.x * speed;
-	var y = position.y * speed;
-	
-	var template = '<img class="character" src="/views/images/cha_ass_m.gif">';
-	template = $(template);
-	template.attr('id', character.id).css('left', x + 'px').css('top', y + 'px');
-	
-	$('#map').append(template);
-};
+}
 
-var moveCharacter = function(character)
+.character
 {
-	var position = character.position;
-	var x = position.x * speed;
-	var y = position.y * speed;
 	
-	$('#' + character.id).css('left', x + 'px').css('top', y + 'px');
-};
-
-var socket = io.connect();
-socket.on('CONNECTED', function(characters)
-{
-	for(var key in characters)
-	{
-		createCharacter(characters[key]);
-	}
-});
-socket.on('USER_CONNECTED', function(character)
-{
-	if($('#' + character.id).length <= 0) 
-		createCharacter(character);
-});
-
-socket.on('MOVE_CHARACTER', function(characters)
-{
-	for(var key in characters)
-		moveCharacter(characters[key]);
-});
-
-$(window).on('keydown', function(e)
-{
-	var keyCode = e.keyCode;
-	if(keyCode == 68)
-	{
-		socket.emit('MOVE_CHARACTER', 'right');
-	}
-	else if(keyCode == 83)
-	{
-		socket.emit('MOVE_CHARACTER', 'down');
-	}
-	else if(keyCode == 65)
-	{
-		socket.emit('MOVE_CHARACTER', 'left');
-	}
-	else if(keyCode == 87)
-	{
-		socket.emit('MOVE_CHARACTER', 'up');
-	}
-});
-</script>
+}
+</style>
 
 <div id="screen" class="screen">
 	<div id="map" class="map"></div>
+	<canvas id="canvasMap"></canvas>
 </div>
+<div id="scrollBoundary"></div>
