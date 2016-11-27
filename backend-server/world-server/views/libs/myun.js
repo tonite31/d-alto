@@ -8,10 +8,10 @@ var canvasMapId = '#canvasMap';
 
 (function()
 {
-	var canvasImages = {};
 	var objectImage = null;
-	
 	var myCharacter = null;
+	
+	var screenSize = {};
 	
 	//접속하면 소켓이 생성된다.
 	var socket = io.connect();
@@ -24,11 +24,28 @@ var canvasMapId = '#canvasMap';
 			
 			$(document).ready(function()
 			{
+				screenSize.width = new Number($(screenId).css('width').replace('px', ''));
+				screenSize.height = new Number($(screenId).css('height').replace('px', ''));
+				
 				$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
 				$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
 				this.createMap(map);
 				this.bindKeyboardAction();
 			}.bind(this));
+			
+			socket.on('UPDATE_MAP', function(map)
+			{
+				this.updateMap(map);
+			}.bind(this));
+			
+//			socket.on('MOVE_CHARACTER', function(data)
+//			{
+//				var object = data.character;
+//				var x = object.property.position.x;
+//				var y = object.property.position.y;
+//				
+//				$('#' + object.id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
+//			});
 
 //			myun.setCharacter(data.character);
 //			myun.setMapSize(map);
@@ -43,13 +60,19 @@ var canvasMapId = '#canvasMap';
 		});
 	}.bind(this));
 	
-	socket.on('UPDATE_MAP', function(map)
+	this.checkInScreen = function(position)
 	{
-		this.updateMap(map);
-	}.bind(this));
+		//일단 맵 스크롤이 안들어간 상황이니까
+		if(0 <= position.x && position.x < screenSize.width && 0 <= position.y && position.y < screenSize.height)
+			return true;
+		
+		return false;
+	};
 	
 	this.loadImages = function(callback)
 	{
+		//캔버스에 그리는 오브젝트는 움직이지도 않고 상호작용도 안하며 파괴되지도 않을것들이다.
+		//따라서 최초에 한 번 로딩하고나서는 건들필요가 없다.
 		objectImage = new Image();
 		objectImage.src = '/views/images/object/object1.png';
 		objectImage.onload = function()
@@ -64,13 +87,19 @@ var canvasMapId = '#canvasMap';
 		var context = canvas.getContext('2d');
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		
+		//이놈들은 dom element를 많이 만드는 애들이기 때문에 성능을 저하시킨다.
 		for(var i=0; i<map.objects.length; i++)
 		{
 			var object = map.objects[i];
 			var props = object.property;
 			if(props.movable || props.interactive)
 			{
-				//움직이거나 상호작용이 필요한 아이들.
+				//dom element가 만들어지는곳이기 때문에 보이는 부분만 그려야 할 필요가 있다.
+				//그렇다면 안보이는 애들은 메모리에만 들고 있는다? 어떻게 될까.
+				//완전 삭제한다고 한다면 업데이트에도 element를 create하는 로직이 들어가야 한다.
+				//근데 그러면 zindex 생각을 안해볼수가 없는부분. 근데 css3로 맵 자체를 좀 기울이면 해결되지 않을까?
+
+				//움직이거나 상호작용이 필요한 아이들은 dom element로 만든다.
 				var x = props.position.x;
 				var y = props.position.y;
 				
@@ -88,19 +117,18 @@ var canvasMapId = '#canvasMap';
 				if(object.id.indexOf('npc-') != -1)
 					template.addClass('npc');
 				
-				$(mapId).append(template);
+				if(this.checkInScreen(props.position))
+				{
+					console.log("스크린 안에 있는 최초의 아이들");
+					$(mapId).append(template);
+				}
 			}
 			else
 			{
-				//움직이지 않고 상호작용도 필요 없는 아이들.
-				(function(object)
-				{
-					var props = object.property;
-					var cx = props.position.x;
-					var cy = props.position.y - (props.size.height - props.collisionSize.height);
-				
-					context.drawImage(objectImage, cx, cy);
-				})(object);
+				//안움직이고 상호작용도 필요 없는 애들은 refresh하지 않는 canvas에 그린다.
+				var cx = props.position.x;
+				var cy = props.position.y - (props.size.height - props.collisionSize.height);
+				context.drawImage(objectImage, cx, cy);
 			}
 		}
 	};
@@ -108,10 +136,6 @@ var canvasMapId = '#canvasMap';
 	this.updateMap = function(map)
 	{
 		//맵을 그린다.
-		var canvas = $(canvasMapId).get(0);
-		var context = canvas.getContext('2d');
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		
 		var objects = map.objects;
 		for(var i=0; i<objects.length; i++)
 		{
@@ -119,21 +143,14 @@ var canvasMapId = '#canvasMap';
 
 			var props = object.property;
 			
-			if(props.movable || props.interactive)
+			//움직이는 애들만 다시 그리면 된다.
+			if(props.movable)
 			{
 				var x = props.position.x;
 				var y = props.position.y;
 				
 				$('#' + object.id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
 			}
-//			else
-//			{
-//				var cx = props.position.x;
-//				var cy = props.position.y - (props.size.height - props.collisionSize.height);
-//
-//				if(canvasImages[object.id])
-//					context.drawImage(canvasImages[object.id], cx, cy);	
-//			}
 		}
 	};
 	

@@ -8,7 +8,7 @@ module.exports = (function()
 	
 	var testMapId = 'test';
 	var testObjectCount = 1000;
-	var testNpcCount = 0;
+	var testNpcCount = 1000;
 	var testDirections = ['left', 'right', 'up', 'down'];
 	var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
 	var npcSpeed = {min : 10, max : 50};
@@ -16,6 +16,8 @@ module.exports = (function()
 	var maps = {}; // 영구적으로 살아있는 맵.
 	var instantMaps = {}; //인스턴트 맵.
 	var users = {}; // 이 서버에 접속중인 전체 유저.
+	
+	var movableCheckMap = {}; //단순 이동체크를 위한 포지션을 키로하는 맵.
 	
 	(function()
 	{
@@ -120,15 +122,27 @@ module.exports = (function()
 				if(props.position.x < 0 || props.position.x + props.collisionSize.width > map.size.width || props.position.y < 0 || props.position.y + props.collisionSize.height > map.size.height)
 					return false;
 				
-				var objects = map.objects;
-				for(var i=0; i<objects.length; i++)
-				{
-					//대상 오브젝트를 제외하고 나머지 오브젝트들과 충돌체크를 해서 이동이 가능한지. 알아본다.
-					if(target.id != objects[i].id && objects[i].property.collision && this.moveCollisionCheck(props, objects[i].property))
-					{
-						return false;
-					}
-				}
+				//이 아래 코드가 성능저하의 주범.
+				//1000명의 유저가 동시에 이동하면 2중포문이다.
+				//1명당 0.001 초가 걸리는데 1000명이면 1초. 따라서 1초씩 계속 렉이 걸린다.
+//				var objects = map.objects;
+//				for(var i=0; i<objects.length; i++)
+//				{
+//					//대상 오브젝트를 제외하고 나머지 오브젝트들과 충돌체크를 해서 이동이 가능한지. 알아본다.
+//					if(target.id != objects[i].id && objects[i].property.collision && this.moveCollisionCheck(props, objects[i].property))
+//					{
+//						return false;
+//					}
+//				}
+				
+				//그래서 이동 가능 체크용 포지션 맵을 쓴다.
+				//싱글스레드라서 동시에 이 값을 변경할 일은 없다.
+				//그렇다면 여기에 들어온 시점에서 이 값들은 정확하다고 보장할 수 있고
+				//이 키값이 true라면 뭐가 있다는거니까. 단순하게 이렇게만 해도 될듯.
+				//근데 이건 2차원 배열이면 문제가 없는데
+				//충돌체크를 해야되므로 안된다.
+				if(movableCheckMap[props.position.x + '-' + props.position.y])
+					return false;
 				
 				return true;
 			}
@@ -139,7 +153,34 @@ module.exports = (function()
 			}
 		};
 		
+		this.objectCreateCallback = function(target)
+		{
+			var position = target.property.position;
+			movableCheckMap[position.x + '-' + position.y] = true;
+		};
+		
+		this.moveObject = function(target, direction)
+		{
+			var tempObject = object.move(target, direction);
+			if(world.checkObjectMovable(world.getMap(), tempObject))
+			{
+				//이동가능하면 기존 위치의 맵 좌표를 지우고
+				delete movableCheckMap[target.property.prevPosition.x + '-' + target.property.prevPosition.y];
+				//이동한 위치에 표시를 한다.
+				movableCheckMap[tempObject.property.position.x + '-' + tempObject.property.position.y] = true;
+				
+				//그리고 실제 포지션 값 업뎃
+				target.property.prevPosition = target.property.position;
+				target.property.position = tempObject.property.position;
+			}
+			
+			delete tempObject;
+		};
+		
 	}).call(world);
+	
+	//임시
+	object.createCallback = this.objectCreateCallback;
 	
 	//테스트 모듈이다.
 	//테스트용 맵을 만들고 테스트용 오브젝트 등을 만든다.
@@ -189,19 +230,24 @@ module.exports = (function()
 				
 				o.id = 'npc-' + o.id;
 			}
+			
+			delete movableCheckMap[props.position.x + '-' + props.position.y];
 
 			//새로 만들지 말고 포지션만 랜덤으로 다시 찍어서 가자.
 			while(!world.checkObjectMovable(maps[id], o))
 			{
 				props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
 			}
+			
+			movableCheckMap[props.position.x + '-' + props.position.y] = true;
 
 			maps[id].objects.push(o);
 		}
 		
-		setInterval(function()
+		world.testRandomMove = function()
 		{
-			//1초에 한 번씩 이동한다.
+//			var startTime = new Date().getTime();
+			
 			var objects = maps[id].objects;
 			for(var i=0; i<objects.length; i++)
 			{
@@ -209,15 +255,18 @@ module.exports = (function()
 				if(o.id.indexOf('npc-') != -1)
 				{
 					var direction = testDirections[random.integer(0, 3)];
-					var tempObject = object.move(o, direction);
-					if(world.checkObjectMovable(world.getMap(), tempObject))
-					{
-						o.property.prevPosition = o.property.position;
-						o.property.position = tempObject.property.position;
-					}
+					world.moveObject(o, direction);
 				}
 			}
-		}, 1000);
+			
+//			console.log("끝 : ", (new Date().getTime() - startTime));
+		};
+		
+//		setInterval(function()
+//		{
+//			//1초에 한 번씩 이동한다.
+//			world.testRandomMove();
+//		}, 1000);
 	})();
 	
 	return world;

@@ -29,6 +29,8 @@ module.exports = (function()
 				moveSpeed : 1
 			};
 			
+			if(this.createCallback)
+				this.createCallback(self);
 			
 			return self;
 		};

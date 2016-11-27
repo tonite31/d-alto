@@ -116,17 +116,18 @@ io.on('connection', function(client)
 	//캐릭터의 움직임.
 	client.on('MOVE_CHARACTER', function(direction)
 	{
-		var tempObject = object.move(character, direction);
-		
-		if(world.checkObjectMovable(world.getMap(), tempObject))
-		{
-			character.property.prevPosition = character.property.position;
-			character.property.position = tempObject.property.position;
-			
-			delete tempObject;
-			//이건 일단 보류 스크롤을 위한 emit이다.
+		world.moveObject(character, direction);
+//		var tempObject = object.move(character, direction);
+//		
+//		if(world.checkObjectMovable(world.getMap(), tempObject))
+//		{
+//			character.property.prevPosition = character.property.position;
+//			character.property.position = tempObject.property.position;
+//			
+//			delete tempObject;
+//			//이건 일단 보류 스크롤을 위한 emit이다.
 //			client.emit('MOVE_CHARACTER', {character : character, direction : direction});
-		}
+//		}
 		
 		
 //		var tc = JSON.parse(JSON.stringify(character));
@@ -153,6 +154,7 @@ io.on('connection', function(client)
 	setInterval(function()
 	{
 		//매번 다시 그려야 하는것은 일단은 움직이는 오브젝트들이다.
+		world.testRandomMove();
 		io.emit('UPDATE_MAP', world.getMap());
 	}, 1000 / 30); //30프레임
 });
