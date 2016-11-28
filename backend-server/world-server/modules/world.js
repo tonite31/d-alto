@@ -19,6 +19,13 @@ module.exports = (function()
 	
 	(function()
 	{
+		this.loadPermanentMaps = function(callback)
+		{
+			//디비로부터 영구적인 맵 목록을 가져옴.
+			callback([]);
+		};
+		
+		
 		this.getCharacter = function(id)
 		{
 			try
@@ -186,115 +193,74 @@ module.exports = (function()
 	//테스트용 맵을 만들고 테스트용 오브젝트 등을 만든다.
 	(function()
 	{
-		var id = testMapId;
-		maps[id] = {
-			id : id,
-			name : 'test맵',
-			size : {width : 10000, height : 10000},
-			position: {x : 0, y : 0},
-			objects : []
-		};
-		
-		world.createCharacter = function()
-		{
-			try
-			{
-				var c = Object.create();
-				users[c.id] = c;
-				
-				var props = c.property;
-				
-				do
-				{
-					//최초 캐릭터의 위치를 임의로 설정한다.
-					props.position.x = random.integer(0, 100);
-					props.position.y = random.integer(0, 100);
-					props.prevPosition.x = props.position.x;
-					props.prevPosition.y = props.position.y;
-					
-					props.image = '/character/cha_ass_m.gif';
-					props.size = {width: 50, height: 100};
-					props.collisionSize = {width: 50, height: 30};
-					
-					props.movable = true;
-					props.interactive = true;
-					props.collision = true;
-					
-					c.stat.moveSpeed = 5;
-					
-				}while(!this.checkObjectMovable(maps[testMapId], c));
-				
-				//캐릭터의 최초 위치를 맵에 등록.
-				maps[testMapId].objects.push(c);
-				return c;
-			}
-			catch(err)
-			{
-				console.log(err.stack);
-				throw new Error(err);
-			}
-		};
-		
-		for(var i=0; i<testObjectCount + testNpcCount; i++)
-		{
-			var o = Object.create();
-			var props = o.property;
-			props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
-			
-			if(i < testObjectCount)
-			{
-				props.image = '/object/object1.png';
-				props.movable = false;
-				props.interactive = false;
-				props.collision = true;
-				
-				props.size = {width: 114, height: 104};
-				props.collisionSize = {width: 114, height: 50};
-				
-				o.id = 'object-' + o.id;
-			}
-			else
-			{
-				props.image = testNpcImages[random.integer(0, 3)];
-				props.movable = true;
-				props.interactive = true;
-				props.collision = true;
-				
-				props.size = {width: 50, height: 100};
-				props.collisionSize = {width: 50, height: 30};
-				
-				o.stat.moveSpeed = random.integer(npcSpeed.min, npcSpeed.max);
-				
-				o.id = 'npc-' + o.id;
-			}
-			
-			//새로 만들지 말고 포지션만 랜덤으로 다시 찍어서 가자.
-			while(!world.checkObjectMovable(maps[id], o))
-			{
-				props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
-			}
-			
-			maps[id].objects.push(o);
-		}
-		
-		world.testRandomMove = function()
-		{
+//		var id = testMapId;
+//		maps[id] = {
+//			id : id,
+//			name : 'test맵',
+//			size : {width : 10000, height : 10000},
+//			position: {x : 0, y : 0},
+//			objects : []
+//		};
+//		
+//		world.createCharacter = function()
+//		{
+//			try
+//			{
+//				var c = Object.create();
+//				users[c.id] = c;
+//				
+//				var props = c.property;
+//				
+//				do
+//				{
+//					//최초 캐릭터의 위치를 임의로 설정한다.
+//					props.position.x = random.integer(0, 100);
+//					props.position.y = random.integer(0, 100);
+//					props.prevPosition.x = props.position.x;
+//					props.prevPosition.y = props.position.y;
+//					
+//					props.image = '/character/cha_ass_m.gif';
+//					props.size = {width: 50, height: 100};
+//					props.collisionSize = {width: 50, height: 30};
+//					
+//					props.movable = true;
+//					props.interactive = true;
+//					props.collision = true;
+//					
+//					c.stat.moveSpeed = 5;
+//					
+//				}while(!this.checkObjectMovable(maps[testMapId], c));
+//				
+//				//캐릭터의 최초 위치를 맵에 등록.
+//				maps[testMapId].objects.push(c);
+//				return c;
+//			}
+//			catch(err)
+//			{
+//				console.log(err.stack);
+//				throw new Error(err);
+//			}
+//		};
+//		
+//		
+//		world.testRandomMove = function()
+//		{
 //			var startTime = new Date().getTime();
-			
-			var objects = maps[id].objects;
-			for(var i=0; i<objects.length; i++)
-			{
-				var o = objects[i];
-				if(o.id.indexOf('npc-') != -1)
-				{
-					var direction = testDirections[random.integer(0, 3)];
-					world.moveObject(o, direction);
-				}
-			}
-			
+//			
+//			var objects = maps[id].objects;
+//			for(var i=0; i<objects.length; i++)
+//			{
+//				var o = objects[i];
+//				if(o.id.indexOf('npc-') != -1)
+//				{
+//					var direction = testDirections[random.integer(0, 3)];
+//					world.moveObject(o, direction);
+//				}
+//			}
+//			
 //			console.log("끝 : ", (new Date().getTime() - startTime));
-		};
-		
+//		};
+//		
 //		setInterval(function()
 //		{
 //			//1초에 한 번씩 이동한다.

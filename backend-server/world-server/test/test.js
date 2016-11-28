@@ -19,10 +19,10 @@ describe('Scenario test', function()
 		it('Load map data', function(done)
 		{
 			//미리 정의된 영구적인 맵 메타 데이터 목록 불러오기.
-			world.loadMaps(['test'], function(list)
+			world.loadPermanentMaps(function(list)
 			{
 				mapMetadataList = list;
-				assert(typeof list == 'Array');
+				assert(list instanceof Array);
 				done();
 			});
 		});
@@ -34,11 +34,13 @@ describe('Scenario test', function()
 			//충돌체크를 위한 존이 나뉘어져 있으며.
 			//그 안에 해당 존에 위치하는 오브젝트가 들어있다.
 			
+			assert(mapMetadataList.length > 0);
+			
 			for(var i=0; i<mapMetadataList.length; i++)
 			{
 				//메타데이터를 이용해서 맵 객체를 생성.
 				var map = world.createMap(mapMetadataList[i]);
-				assert.equal(map.id, 'test');
+				assert(map._id);
 				assert.equal(map.name, 'test');
 				assert.equal(typeof map.size == 'object');
 				assert(map.size.hasOwnProperty('width'));
@@ -48,12 +50,12 @@ describe('Scenario test', function()
 				assert(typeof map.metaObjectList == 'Array');
 				
 				//이건 추후 저장용 메모리공간
-				assert(typeof map.objects == 'Array');
-				assert(typeof map.zone == 'Array');
+				assert(map.objects instanceof Array);
+				assert(map.zone instanceof Array);
 			}
 		});
 		
-		it('Create objects of each maps.', function()
+		it('Create objects of each maps', function()
 		{
 			//각 맵에 필요한 오브젝트를 생성 후 배치.
 			
@@ -95,7 +97,7 @@ describe('Scenario test', function()
 					
 					var zone = world.maps[object.location.mapId].zone[x + '-' + y];
 					
-					assert(typeof zone == 'Array');
+					assert(zone instanceof Array);
 					
 					var check = false;
 					for(var j=0; j<zone.length; j++)
@@ -112,23 +114,26 @@ describe('Scenario test', function()
 		});
 	});
 	
-	it('Move objects', function()
+	describe('play test', function()
 	{
-	});
-	
-	it('User, create character.', function()
-	{
-	});
-	
-	it('User, connect to server by selected character', function()
-	{
-	});
-	
-	it('Set initial position of user character', function()
-	{
-	});
-	
-	it('Move user character', function()
-	{
+		it('Move objects', function()
+		{
+		});
+		
+		it('User, create character.', function()
+		{
+		});
+		
+		it('User, connect to server by selected character', function()
+		{
+		});
+		
+		it('Set initial position of user character', function()
+		{
+		});
+		
+		it('Move user character', function()
+		{
+		});
 	});
 });
