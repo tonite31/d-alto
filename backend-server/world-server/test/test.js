@@ -22,7 +22,9 @@ describe('Scenario test', function()
 		it('Load map data', function(done)
 		{
 			//미리 정의된 영구적인 맵 메타 데이터 목록 불러오기.
-			world.loadPermanentMaps(function(list)
+			//db or file.
+			//불러오면 그 안에 오브젝트 데이터들이 들어있으므로 그걸 바로 객체로 만들어서 메모리로 들고 있으면 된다.
+			world.createMaps(function(list)
 			{
 				mapMetadataList = list;
 				assert(list instanceof Array);

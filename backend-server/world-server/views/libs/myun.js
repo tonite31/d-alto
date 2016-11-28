@@ -2,7 +2,7 @@ var myun = {};
 
 var mapId = '#map';
 var screenId = '#screen';
-var canvasMapId = '#canvasMap';
+var canvasMapId = '#canvas';
 
 //3. 맵의 오브젝트(내 캐릭터 포함)를 그린다.
 
@@ -22,20 +22,98 @@ var canvasMapId = '#canvasMap';
 			var map = data.map;
 			myCharacter = data.character;
 			
+			var screenPosition = {left: 0, right: 0, top: 0, bottom: 0};
+			var drawedObjectList = {};
+			
 			$(document).ready(function()
 			{
-				screenSize.width = new Number($(screenId).css('width').replace('px', ''));
-				screenSize.height = new Number($(screenId).css('height').replace('px', ''));
-				
-				$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
-				$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
-				this.createMap(map);
-				this.bindKeyboardAction();
+				try
+				{
+					screenSize.width = new Number($(screenId).css('width').replace('px', ''));
+					screenSize.height = new Number($(screenId).css('height').replace('px', ''));
+					
+					screenPosition.right = screenSize.width;
+					screenPosition.bottom = screenSize.height;
+					
+					socket.emit('UPDATE_OBJECTS', {screenPosition : screenPosition});
+					
+					$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
+					$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
+//					this.createMap(map);
+					this.bindKeyboardAction();
+				}
+				catch(err)
+				{
+					console.error(err.stack);
+				}
 			}.bind(this));
 			
-			socket.on('UPDATE_MAP', function(map)
+//			setInterval(function()
+//			{
+//			}, 1000/30);
+			
+			//어쨋든 캐릭터의 이동에 따라서 보이지 않게 되는 element들도 있을것이다.
+			//그런 애들은 어떻게 처리 할지...	
+			socket.on('UPDATE_OBJECTS', function(objects)
 			{
-				this.updateMap(map);
+				var list = {};
+				for(var i=0; i<objects.length; i++)
+				{
+					var zone = objects[i];
+					for(var key in zone)
+					{
+						var object = zone[key];
+						var props = object.property;
+						var location = object.location;
+						
+						//dom element가 만들어지는곳이기 때문에 보이는 부분만 그려야 할 필요가 있다.
+						//그렇다면 안보이는 애들은 메모리에만 들고 있는다? 어떻게 될까.
+						//완전 삭제한다고 한다면 업데이트에도 element를 create하는 로직이 들어가야 한다.
+						//근데 그러면 zindex 생각을 안해볼수가 없는부분. 근데 css3로 맵 자체를 좀 기울이면 해결되지 않을까?
+
+						//움직이거나 상호작용이 필요한 아이들은 dom element로 만든다.
+						
+						//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
+						if(!drawedObjectList[object._id])
+						{
+							var x = location.position.x;
+							var y = location.position.y;
+							
+							var template = '<div class="object"><div class="object-image"></div></div>';
+							template = $(template);
+							template.attr('id', object._id)
+							.css('transform', 'translate(' + x + 'px, ' + y + 'px)')
+							.css('width', props.collisionSize.width + 'px')
+							.css('height', props.collisionSize.height + 'px')
+							.children('div')
+							.css('background-image', 'url(/views/images/' + props.image + ')')
+							.css('width', props.size.width + 'px')
+							.css('height', props.size.height + 'px');
+							
+							$(mapId).append(template);
+						}
+						else
+						{
+							//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
+							$('#' + object._id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
+						}
+						
+						//그린건 지워버린다.
+						list[object._id] = object;
+						delete drawedObjectList[object._id];
+					}
+				}
+				
+				//그리지 못하고 남아있는건 element를 지운다. 그럼 시야에서 사라진(파괴된) 오브젝트들이 모두 없어진다. hide는 나중에 생각.
+				for(var key in drawedObjectList)
+				{
+					$('#' + drawedObjectList[key]._id).remove();
+				}
+				
+				//그리고 새로운 리스트로 대체한다.
+				drawedObjectList = list;
+				
+//				this.updateObjects(objects);
 			}.bind(this));
 			
 //			socket.on('MOVE_CHARACTER', function(data)
@@ -60,52 +138,36 @@ var canvasMapId = '#canvasMap';
 		});
 	}.bind(this));
 	
-	this.checkInScreen = function(position)
-	{
-		//일단 맵 스크롤이 안들어간 상황이니까
-		if(0 <= position.x && position.x < screenSize.width && 0 <= position.y && position.y < screenSize.height)
-			return true;
-		
-		return false;
-	};
-	
 	this.loadImages = function(callback)
 	{
-		//캔버스에 그리는 오브젝트는 움직이지도 않고 상호작용도 안하며 파괴되지도 않을것들이다.
-		//따라서 최초에 한 번 로딩하고나서는 건들필요가 없다.
-		objectImage = new Image();
-		objectImage.src = '/views/images/object/object1.png';
-		objectImage.onload = function()
-		{
-			callback();
-		};
+		//캔버스에는 스킬 이펙트 같은걸 표현할거.
+		//그 이미지들을 미리 로딩해두자.
+		callback();
 	};
 	
 	this.createMap = function(map)
 	{
-		var canvas = $(canvasMapId).get(0);
-		var context = canvas.getContext('2d');
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		
-		//이놈들은 dom element를 많이 만드는 애들이기 때문에 성능을 저하시킨다.
-		for(var i=0; i<map.objects.length; i++)
+		try
 		{
-			var object = map.objects[i];
-			var props = object.property;
-			if(props.movable || props.interactive)
+			//존으로 구분해놨으니까 여기에서 전부 dom element로 그린다.
+			for(var i=0; i<map.objects.length; i++)
 			{
+				var object = map.objects[i];
+				var props = object.property;
+				var location = object.location;
+				
 				//dom element가 만들어지는곳이기 때문에 보이는 부분만 그려야 할 필요가 있다.
 				//그렇다면 안보이는 애들은 메모리에만 들고 있는다? 어떻게 될까.
 				//완전 삭제한다고 한다면 업데이트에도 element를 create하는 로직이 들어가야 한다.
 				//근데 그러면 zindex 생각을 안해볼수가 없는부분. 근데 css3로 맵 자체를 좀 기울이면 해결되지 않을까?
 
 				//움직이거나 상호작용이 필요한 아이들은 dom element로 만든다.
-				var x = props.position.x;
-				var y = props.position.y;
+				var x = location.position.x;
+				var y = location.position.y;
 				
 				var template = '<div class="object"><div class="object-image"></div></div>';
 				template = $(template);
-				template.attr('id', object.id)
+				template.attr('id', object._id)
 				.css('transform', 'translate(' + x + 'px, ' + y + 'px)')
 				.css('width', props.collisionSize.width + 'px')
 				.css('height', props.collisionSize.height + 'px')
@@ -114,44 +176,56 @@ var canvasMapId = '#canvasMap';
 				.css('width', props.size.width + 'px')
 				.css('height', props.size.height + 'px');
 				
-				if(object.id.indexOf('npc-') != -1)
-					template.addClass('npc');
+//				$(mapId).append(template);
 				
-				if(this.checkInScreen(props.position))
+				//일단 렌더링이 문제가 되진 않은것 같다.
+				if(this.checkInScreen(location.position))
 				{
 					console.log("스크린 안에 있는 최초의 아이들");
 					$(mapId).append(template);
 				}
 			}
-			else
-			{
-				//안움직이고 상호작용도 필요 없는 애들은 refresh하지 않는 canvas에 그린다.
-				var cx = props.position.x;
-				var cy = props.position.y - (props.size.height - props.collisionSize.height);
-				context.drawImage(objectImage, cx, cy);
-			}
+		}
+		catch(err)
+		{
+			console.error(err.stack);
 		}
 	};
 	
-	this.updateMap = function(map)
+	this.updateObjects = function(objects)
 	{
-		//맵을 그린다.
-		var objects = map.objects;
-		for(var i=0; i<objects.length; i++)
+		try
 		{
-			var object = objects[i];
-
-			var props = object.property;
-			
-			//움직이는 애들만 다시 그리면 된다.
-			if(props.movable)
+			//맵을 그린다.
+			for(var key in objects)
 			{
-				var x = props.position.x;
-				var y = props.position.y;
+				var object = objects[key];
+
+				var location = object.location;
 				
-				$('#' + object.id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
+				//움직이는 애들만 다시 그리면 된다.
+				if(object.property.movable)
+				{
+					var x = location.position.x;
+					var y = location.position.y;
+					
+					$('#' + object._id).css('transform', 'translate(' + x + 'px, ' + y + 'px)');
+				}
 			}
 		}
+		catch(err)
+		{
+			console.error(err.stack);
+		}
+	};
+	
+	this.checkInScreen = function(position)
+	{
+		//일단 맵 스크롤이 안들어간 상황이니까
+		if(0 <= position.x && position.x < screenSize.width && 0 <= position.y && position.y < screenSize.height)
+			return true;
+		
+		return false;
 	};
 	
 	this.bindKeyboardAction = function()

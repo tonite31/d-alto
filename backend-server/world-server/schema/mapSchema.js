@@ -7,6 +7,10 @@ var Map = new Schema({
 		width : Number,
 		height : Number
 	},
+	zoneSize : {
+		width: Number,
+		height: Number
+	},
 	metaObjectList : [{data : String}]
 });
  
