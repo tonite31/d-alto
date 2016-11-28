@@ -1,4 +1,0 @@
-front-server : 클라이언트 역할을 한다.
-user-server : 로그인과 유저정보 관리.
-data-server : db io가 발생하는 단순 crud 정보들 관리.
-chat-server : 유저들끼리의 채팅.
