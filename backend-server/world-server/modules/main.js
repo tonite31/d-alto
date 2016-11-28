@@ -1,18 +1,39 @@
+var uuid = require('uuid');
+var random = require("random-js")();
 var world = require('./world');
 
-var Map = require('./schema/mapSchema');
+var Object = require('../schema/objectSchema');
+var Map = require('../schema/mapSchema');
 
 module.exports = function()
 {
 	//테스트용 함수를 만든다.
 	
-	var getObjectList = function()
+	var testMapId = 'test';
+	var testObjectCount = 1000;
+	var testNpcCount = 1000;
+	var testDirections = ['left', 'right', 'up', 'down'];
+	var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
+	var npcSpeed = {min : 10, max : 50};
+	
+	var getObjectList = function(map)
 	{
+		var result = [];
 		for(var i=0; i<testObjectCount + testNpcCount; i++)
 		{
-			var o = Object.create();
-			var props = o.property;
-			props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
+			var object = new Object({
+				name : 'stone'
+			});
+			
+			object = object.toJSON();
+			object.property = {};
+			object.location = {};
+			object.stat = {};
+			
+			var location = object.location;
+			location.prevPosition = location.position = {x : random.integer(0, map.size.width), y : random.integer(0, map.size.height)};
+			
+			var props = object.property;
 			
 			if(i < testObjectCount)
 			{
@@ -24,7 +45,7 @@ module.exports = function()
 				props.size = {width: 114, height: 104};
 				props.collisionSize = {width: 114, height: 50};
 				
-				o.id = 'object-' + o.id;
+				object.id = 'object-' + uuid.v4();
 			}
 			else
 			{
@@ -36,26 +57,25 @@ module.exports = function()
 				props.size = {width: 50, height: 100};
 				props.collisionSize = {width: 50, height: 30};
 				
-				o.stat.moveSpeed = random.integer(npcSpeed.min, npcSpeed.max);
+				object.stat.moveSpeed = random.integer(npcSpeed.min, npcSpeed.max);
 				
-				o.id = 'npc-' + o.id;
+				object.id = 'npc-' + uuid.v4();
 			}
 			
 			//새로 만들지 말고 포지션만 랜덤으로 다시 찍어서 가자.
-			while(!world.checkObjectMovable(maps[id], o))
+			while(!world.checkObjectMovable(map, object))
 			{
-				props.prevPosition = props.position = {x : random.integer(0, maps[id].size.width), y : random.integer(0, maps[id].size.height)};
+				location.prevPosition = location.position = {x : random.integer(0, map.size.width), y : random.integer(0, map.size.height)};
 			}
 			
-			maps[id].objects.push(o);
+			result.push(object);
 		}
+		
+		return result;
 	};
 	
 	world.loadPermanentMaps = function(callback)
 	{
-		var objectList = [];
-		
-		
 		var list = [];
 		
 		var map = new Map({
@@ -64,12 +84,34 @@ module.exports = function()
 				width: 1000,
 				height: 1000
 			},
-			mapObjectList : objectList
+			mapObjectList : []
 		});
+		
+		map = map.toJSON();
+		map.objects = [];
 		
 		list.push(map);
 		
+		map.mapObjectList = getObjectList(map);
+		
 		callback(list);
+	};
+	
+	world.createObject = function(objectMetaData)
+	{
+		
+	};
+	
+	world.createMap = function(mapData)
+	{
+		var map = {};
+		map.name = mapData.name;
+		map.size = mapData.size;
+		map.objects = [];
+		map.zone = [];
+		map._id = 'test';
+		
+		return map;
 	};
 };
 

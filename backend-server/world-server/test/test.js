@@ -8,11 +8,12 @@ var random = require("random-js")();
 var world = require('../modules/world');
 
 //어떤 데이터를, 어디서 불러오고 그런거..를 메인 모듈이 결정하는데
-var main = require('../modules/main');
+var main = require('../modules/main')();
 
 describe('Scenario test', function()
 {
 	var mapMetadataList = [];
+	var mapInstance = {};
 	
 	describe('Load maps', function()
 	{
@@ -42,16 +43,15 @@ describe('Scenario test', function()
 				var map = world.createMap(mapMetadataList[i]);
 				assert(map._id);
 				assert.equal(map.name, 'test');
-				assert.equal(typeof map.size == 'object');
+				assert(typeof map.size == 'object');
 				assert(map.size.hasOwnProperty('width'));
 				assert(map.size.hasOwnProperty('height'));
-				
-				//메타데이터이고 객체화 시켜서 아래 메모리공간에 저장한 후 삭제함.
-				assert(typeof map.metaObjectList == 'Array');
 				
 				//이건 추후 저장용 메모리공간
 				assert(map.objects instanceof Array);
 				assert(map.zone instanceof Array);
+				
+				mapInstance[map.id] = map;
 			}
 		});
 		

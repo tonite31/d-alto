@@ -1,17 +1,10 @@
-var Object = require('./object');
+var Object = require('../schema/objectSchema');
 //var character = require('./character');
 var random = require("random-js")();
 
 module.exports = (function()
 {
 	var world = {};
-	
-	var testMapId = 'test';
-	var testObjectCount = 1000;
-	var testNpcCount = 1000;
-	var testDirections = ['left', 'right', 'up', 'down'];
-	var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
-	var npcSpeed = {min : 10, max : 50};
 	
 	var maps = {}; // 영구적으로 살아있는 맵.
 	var instantMaps = {}; //인스턴트 맵.
@@ -65,8 +58,8 @@ module.exports = (function()
 		{
 			try
 			{
-				var xOverlap = this.valueInRange(src.position.x, dest.position.x, dest.position.x + dest.collisionSize.width) || this.valueInRange(dest.position.x, src.position.x, src.position.x + src.collisionSize.width);
-				var yOverlap = this.valueInRange(src.position.y, dest.position.y, dest.position.y + dest.collisionSize.height) || this.valueInRange(dest.position.y, src.position.y, src.position.y + src.collisionSize.height);
+				var xOverlap = this.valueInRange(src.location.position.x, dest.location.position.x, dest.location.position.x + dest.property.collisionSize.width) || this.valueInRange(dest.location.position.x, src.location.position.x, src.location.position.x + src.property.collisionSize.width);
+				var yOverlap = this.valueInRange(src.location.position.y, dest.location.position.y, dest.location.position.y + dest.property.collisionSize.height) || this.valueInRange(dest.location.position.y, src.location.position.y, src.location.position.y + src.property.collisionSize.height);
 				
 				return xOverlap && yOverlap;
 			}
@@ -82,8 +75,9 @@ module.exports = (function()
 			try
 			{
 				var props = target.property;
+				var location = target.location;
 				//가장먼저 맵 밖으로 벗어나는지를 체크 해야한다.
-				if(props.position.x < 0 || props.position.x + props.collisionSize.width > map.size.width || props.position.y < 0 || props.position.y + props.collisionSize.height > map.size.height)
+				if(location.position.x < 0 || location.position.x + props.collisionSize.width > map.size.width || location.position.y < 0 || location.position.y + props.collisionSize.height > map.size.height)
 					return false;
 				
 				//이 아래 코드가 성능저하의 주범.
@@ -93,7 +87,7 @@ module.exports = (function()
 				for(var i=0; i<objects.length; i++)
 				{
 					//대상 오브젝트를 제외하고 나머지 오브젝트들과 충돌체크를 해서 이동이 가능한지. 알아본다.
-					if(target.id != objects[i].id && objects[i].property.collision && this.moveCollisionCheck(props, objects[i].property))
+					if(target.id != objects[i].id && objects[i].property.collision && this.moveCollisionCheck(target, objects[i]))
 					{
 						return false;
 					}
