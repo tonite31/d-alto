@@ -15,6 +15,8 @@ describe('Scenario test', function()
 	var mapMetadataList = [];
 	var mapInstance = {};
 	
+	//맵을 읽어오면 바로 객체가 만들어진다.
+	//메타 따로 객체 따로 만들 이유가 없다.
 	describe('Load maps', function()
 	{
 		it('Load map data', function(done)
