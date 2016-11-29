@@ -66,30 +66,30 @@ var canvasMapId = '#canvas';
 						var props = object.property;
 						var location = object.location;
 						
+						var x = location.position.x;
+						var y = location.position.y;
+						
 						//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
 						if(!drawedObjectList[object._id])
 						{
-							var x = location.position.x;
-							var y = location.position.y;
-							
 							var template = '<div class="object"><div class="object-image"></div></div>';
 							template = $(template);
 							template.attr('id', object._id)
 							.css('transform', 'translate(' + x + 'px, ' + y + 'px)')
 							.css('width', props.collisionSize.width + 'px')
 							.css('height', props.collisionSize.height + 'px')
+							.css('zIndex', y)
 							.children('div')
 							.css('background-image', 'url(/views/images/' + props.image + ')')
 							.css('width', props.size.width + 'px')
 							.css('height', props.size.height + 'px');
-							.css('z-index', y);
 							
 							$(mapId).append(template);
 						}
 						else
 						{
 							//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
-							$('#' + object._id).css('transform', 'translate(' + x + 'px, ' + y + 'px)').css('z-index', y);
+							$('#' + object._id).css('transform', 'translate(' + x + 'px, ' + y + 'px)').css('zIndex', y);
 						}
 						
 						//그린건 지워버린다.

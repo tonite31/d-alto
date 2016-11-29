@@ -64,8 +64,8 @@ module.exports = (function()
 		{
 			try
 			{
-				var testObjectCount = 5000;
-				var testNpcCount = 5000;
+				var testObjectCount = 1000;
+				var testNpcCount = 1000;
 				var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
 				var npcSpeed = {min : 10, max : 50};
 				
@@ -199,7 +199,7 @@ module.exports = (function()
 					location.prevPosition.x = location.position.x;
 					location.prevPosition.y = location.position.y;
 					
-					this.setObjectZone(map, object);
+					this.setObjectZone(maps[object.location.mapName], object);
 					
 				}while(!collision.checkObjectMovable(maps[object.location.mapName], object));
 				
