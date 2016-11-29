@@ -115,10 +115,8 @@ module.exports = (function()
 					while(!collision.checkObjectMovable(map, object))
 					{
 						location.prevPosition = location.position = {x : random.integer(0, map.size.width), y : random.integer(0, map.size.height)};
+						this.setObjectZone(map, object);
 					}
-					
-					//각 오브젝트를 존에 편입시킨다.
-					this.setObjectZone(map, object);
 					
 					result.push(object);
 				}
@@ -201,10 +199,11 @@ module.exports = (function()
 					location.prevPosition.x = location.position.x;
 					location.prevPosition.y = location.position.y;
 					
+					this.setObjectZone(map, object);
+					
 				}while(!collision.checkObjectMovable(maps[object.location.mapName], object));
 				
 				maps[object.location.mapName].objects.push(object);
-				this.setObjectZone(maps[object.location.mapName], object);
 				
 				users[object._id] = object;
 				
