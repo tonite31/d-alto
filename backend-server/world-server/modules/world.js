@@ -139,21 +139,46 @@ module.exports = (function()
 				
 				var x = Math.floor(object.location.position.x / zw);
 				var y = Math.floor(object.location.position.y / zh);
+				var right = Math.floor((object.location.position.x + object.property.collisionSize.width) / zw);
+				var bottom = Math.floor((object.location.position.y + object.property.collisionSize.height) / zh);
 				
-				var newZoneId = x + '-' + y;
+				//만약 기존 zoneId가 있으면
+				if(object.location.zoneId != null)
+				{
+					//해당 존에서 오브젝트를 삭제.
+					for(var k=0; k<object.location.zoneId.length; k++)
+					{
+						delete map.zone[object.location.zoneId[k]][object._id];
+					}
+				}
 				
-				if(!map.zone.hasOwnProperty(newZoneId))
-					map.zone[newZoneId] = {};
+				var zoneId = [];
+				for(var i=x; i<=right; i++)
+				{
+					for(var j=y; j<=bottom; j++)
+					{
+						//새로운 오브젝트의 존을 구해서.
+						var newZoneId = i + '-' + j;
+						
+						//등록된게 없으면 객체를 초기화 해주고
+						if(!map.zone.hasOwnProperty(newZoneId))
+							map.zone[newZoneId] = {};
+						
+						//해당 존에 object를 넣는다.
+						map.zone[newZoneId][object._id] = object;
+						
+						//새로운 zoneId List를 만든다.
+						zoneId.push(newZoneId);
+					}
+				}
 				
-				map.zone[newZoneId][object._id] = object;
-				
-				if(object.location.zoneId != null && object.location.zoneId != newZoneId)
-					delete map.zone[object.location.zoneId][object._id];
-				
-				object.location.zoneId = newZoneId;
+				//새로운 존으로 변경.
+				object.location.zoneId = zoneId;
 				
 				delete x;
 				delete y;
+				delete right;
+				delete bottom;
 			}
 			catch(err)
 			{

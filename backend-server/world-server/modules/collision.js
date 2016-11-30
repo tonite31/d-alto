@@ -37,30 +37,21 @@ module.exports = (function()
 				//가장먼저 맵 밖으로 벗어나는지를 체크 해야한다.
 				if(location.position.x < 0 || location.position.x + props.collisionSize.width > map.size.width || location.position.y < 0 || location.position.y + props.collisionSize.height > map.size.height)
 					return false;
-				
-				//이 아래 코드가 성능저하의 주범.
-				//1000명의 유저가 동시에 이동하면 2중포문이다.
-				//1명당 0.001 초가 걸리는데 1000명이면 1초. 따라서 1초씩 계속 렉이 걸린다.
-				
-				var objects = map.zone[target.location.zoneId];
-				var count = 0;
-				for(var key in objects)
+
+				for(var i=0; i<target.location.zoneId.length; i++)
 				{
-					var object = objects[key];
-					if(target._id != key && object.property.collision && this.moveCollisionCheck(target, object))
+					var zoneId = target.location.zoneId[i];
+					var objects = map.zone[zoneId];
+					var count = 0;
+					for(var key in objects)
 					{
-						return false;
+						var object = objects[key];
+						if(target._id != key && object.property.collision && this.moveCollisionCheck(target, object))
+						{
+							return false;
+						}
 					}
 				}
-				
-//				for(var i=0; i<objects.length; i++)
-//				{
-//					//대상 오브젝트를 제외하고 나머지 오브젝트들과 충돌체크를 해서 이동이 가능한지. 알아본다.
-//					if(target._id != objects[i]._id && objects[i].property.collision && this.moveCollisionCheck(target, objects[i]))
-//					{
-//						return false;
-//					}
-//				}
 				
 				return true;
 			}

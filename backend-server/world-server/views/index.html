@@ -13,6 +13,8 @@ body
 	position: absolute;
 	outline: 1px solid #ddd;
 	overflow: visible;
+	
+	transition: transform .1s linear;
 }
 
 .object > .object-image
@@ -74,8 +76,10 @@ body
 }
 </style>
 
-<div id="screen" class="screen">
-	<div id="map" class="map"></div>
-	<canvas id="canvas"></canvas>
+<div>
+	<div id="screen" class="screen">
+		<div id="map" class="map"></div>
+		<canvas id="canvas"></canvas>
+	</div>
+	<div id="scrollBoundary"></div>
 </div>
-<div id="scrollBoundary"></div>
