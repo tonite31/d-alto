@@ -8,7 +8,10 @@ var canvasMapId = '#canvas';
 
 (function()
 {
-	var objectImage = null;
+	var FPS = 30;
+	
+	var images = [];
+	
 	var myCharacter = null;
 	var map = null;
 	
@@ -16,6 +19,9 @@ var canvasMapId = '#canvas';
 	var screenSize = {};
 	var screenPosition = {left: 0, right: 0, top: 0, bottom: 0};
 	var drawedObjectList = {};
+	
+	var keyHolded = false;
+	var keyHoldInterval = null;
 	
 	//접속하면 소켓이 생성된다.
 	var socket = io.connect();
@@ -30,12 +36,7 @@ var canvasMapId = '#canvas';
 			{
 				try
 				{
-					screenSize.width = new Number($(screenId).css('width').replace('px', ''));
-					screenSize.height = new Number($(screenId).css('height').replace('px', ''));
-					
-					screenPosition.right = screenSize.width;
-					screenPosition.bottom = screenSize.height;
-					
+					this.setScreenSize();
 					this.moveScreenOnMyCharacter();
 					
 					setInterval(function()
@@ -47,11 +48,13 @@ var canvasMapId = '#canvas';
 							bottom: screenPosition.bottom - mapScrollData.top
 						};
 						
+						if(keyHolded)
+							socket.emit('MOVE_CHARACTER', keyHolded);
 						socket.emit('UPDATE_OBJECTS', {screenPosition : sp});
-					}, 1000/30);
+					}, 1000/FPS);
 					
 					$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
-					$(canvasMapId).attr('width', map.size.width).attr('height', map.size.height);
+					$(canvasMapId).attr('width', screenSize.width).attr('height', screenSize.height);
 
 					this.bindKeyboardAction();
 				}
@@ -61,6 +64,12 @@ var canvasMapId = '#canvas';
 				}
 			}.bind(this));
 			
+			$(window).resize(function()
+			{
+				this.setScreenSize();
+				this.moveScreenOnMyCharacter();
+			}.bind(this));
+			
 			
 			//어쨋든 캐릭터의 이동에 따라서 보이지 않게 되는 element들도 있을것이다.
 			//그런 애들은 어떻게 처리 할지...	
@@ -68,6 +77,7 @@ var canvasMapId = '#canvas';
 			{
 				try
 				{
+					var maxY = 0;
 					var list = {};
 					for(var i=0; i<objects.length; i++)
 					{
@@ -81,46 +91,43 @@ var canvasMapId = '#canvas';
 							var x = new Number(location.position.x);
 							var y = new Number(location.position.y);
 							
-							//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
-//							if(myCharacter._id == object._id)
-							{
-								var element = $('#' + object._id);
-								
-								if(element.length <= 0)
-								{
-									var template = '<div class="object"><div class="object-image"></div></div>';
-									template = $(template);
-									template.attr('id', object._id)
-									.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)')
-									.css('width', props.collisionSize.width + 'px')
-									.css('height', props.collisionSize.height + 'px')
-									.css('zIndex', y)
-									.children('div')
-									.css('background-image', 'url(/views/images/' + props.image + ')')
-									.css('width', props.size.width + 'px')
-									.css('height', props.size.height + 'px');
-									
-									$(mapId).append(template);
-								}
-								else
-								{
-									//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
-//									if(myCharacter._id == object._id && this.scrollScreen(object))
-//									{
-//										if(element.parent().get(0) != $(screenId).get(0))
-//											$(screenId).prepend($('#' + object._id));
-//										element.css('position', 'fixed').css('transform', 'translate3d(' + (x + mapScrollData.left) + 'px, ' + (y + mapScrollData.top) + 'px, 0px)').css('zIndex', y);
-//									}
-//									else
-//									{
-//										if(myCharacter._id == object._id && element.parent().get(0) == $(screenId).get(0))
-//											$(mapId).append(element);
-											
-										element.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)').css('zIndex', y).css('position', 'absolute');
-//									}
-								}
-							}
+							if(maxY < y)
+								maxY = y;
 							
+							//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
+							var element = $('#' + object._id);
+							
+							if(element.length <= 0)
+							{
+								var template = '<div class="object"><div class="object-image"></div></div>';
+								template = $(template);
+								template.attr('id', object._id)
+								.css('width', props.collisionSize.width + 'px')
+								.css('height', props.collisionSize.height + 'px')
+								.css('zIndex', y)
+								.children('div')
+								.css('background-image', 'url(/views/images/' + props.image + ')')
+								.css('width', props.size.width + 'px')
+								.css('height', props.size.height + 'px');
+								
+								if(props.movable)
+									template.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)');
+								else
+									template.css('left', x + 'px').css('top', y + 'px');
+								
+								$(mapId).append(template);
+							}
+							else
+							{
+								if(myCharacter._id == object._id)
+									this.scrollScreen(object);
+								
+								//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
+								if(props.movable)
+									element.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)').css('zIndex', y);
+								else
+									element.css('left', x + 'px').css('top', y + 'px').css('zIndex', y);
+							}
 							
 							//그린건 지워버린다.
 							list[object._id] = object;
@@ -136,6 +143,8 @@ var canvasMapId = '#canvas';
 					
 					//그리고 새로운 리스트로 대체한다.
 					drawedObjectList = list;
+					
+					$(canvasMapId).css('zIndex', maxY);
 				}
 				catch(err)
 				{
@@ -150,7 +159,21 @@ var canvasMapId = '#canvas';
 	{
 		//캔버스에는 스킬 이펙트 같은걸 표현할거.
 		//그 이미지들을 미리 로딩해두자.
-		callback();
+		
+		images[0] = new Image();;
+		images[0].src = '/views/images/skill/skill1.png';
+		images[0].onload = function()
+		{
+			callback();
+		};
+	};
+	
+	this.setScreenSize = function()
+	{
+		screenSize.width = new Number($(screenId).css('width').replace('px', ''));
+		screenSize.height = new Number($(screenId).css('height').replace('px', ''));
+		screenPosition.right = screenSize.width;
+		screenPosition.bottom = screenSize.height;
 	};
 	
 	this.moveScreenOnMyCharacter = function()
@@ -160,7 +183,11 @@ var canvasMapId = '#canvas';
 		
 		//최초에는 맵과 스크린 모두 0,0으로 시작하므로
 		//캐릭터 좌표가 스크린 크기보다 작으면 보이는것.
-		if(myCharacter.location.position.x <= screenSize.width && myCharacter.location.position.y <= screenSize.height)
+		//최초하고 브라우저 사이즈 변경시에 초기화 할거라서 0으로 넣어줌.
+		mapScrollData.left = 0;
+		mapScrollData.top = 0;
+		
+		if(myCharacter.location.position.x + myCharacter.property.collisionSize.width <= screenSize.width && myCharacter.location.position.y + myCharacter.property.collisionSize.height <= screenSize.height)
 			return;
 		
 		var x = Math.abs(halfX - (myCharacter.location.position.x + myCharacter.property.collisionSize.width/2));
@@ -176,7 +203,7 @@ var canvasMapId = '#canvas';
 		else
 			mapScrollData.top -= map.size.height - x + screenSize.height;
 		
-		$(mapId).css('left', mapScrollData.left + 'px').css('top', mapScrollData.top + 'px');
+		$(mapId).css('transform', 'translate3d(' + mapScrollData.left + 'px, ' + mapScrollData.top + 'px, 0px)');
 	};
 	
 	this.scrollScreen = function(object)
@@ -223,32 +250,36 @@ var canvasMapId = '#canvas';
 		//맵의 한계라서 스크롤을 할 수 없는 경우도 있으니 체크.
 		myCharacter = object;
 		
-		if(check)
-		{
-			$(mapId).css('left', mapScrollData.left + 'px').css('top', mapScrollData.top + 'px');
-			return true;
-		}
+		$(mapId).css('transform', 'translate3d(' + mapScrollData.left + 'px, ' + mapScrollData.top + 'px, 0px)');
 		
-		//이 경우는 위에서 다시 그려야함 absolute로 움직이기 때문에.
-		return false;
+		return true;
 	};
 	
 	this.bindKeyboardAction = function()
 	{
 		$(window).on('keydown', function(e)
 		{
-			var direction = null;
-			var keyCode = e.keyCode;
-			if(keyCode == 68)
-				direction = 'right';
-			else if(keyCode == 83)
-				direction = 'down';
-			else if(keyCode == 65)
-				direction = 'left';
-			else if(keyCode == 87)
-				direction = 'up';
+			var direction = _KeyCode.isMoving(e);
 			
-			socket.emit('MOVE_CHARACTER', direction);
+			if(direction)
+			{
+				keyHolded = direction;
+			}
+			else
+			{
+				if(_KeyCode[e.keyCode + ''] == '1')
+				{
+					//스킬
+				}
+			}
+		});
+		
+		$(window).on('keyup', function(e)
+		{
+			if(_KeyCode.isMoving(e) == keyHolded)
+			{
+				keyHolded = null;
+			}
 		});
 	};
 })();

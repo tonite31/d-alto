@@ -86,6 +86,19 @@ module.exports = function(app, io)
 				world.moveObject(character, direction);
 //				client.emit('MOVE_CHARACTER', {character : character, direction : direction});
 			});
+			
+			client.on('disconnect', function()
+			{
+				setTimeout(function()
+				{
+					world.deleteObject(client.request.session.characterId);
+				},10 * 1000);
+			});
+			
+			client.on("error", function(error)
+			{
+			    console.log(error);
+			});
 		});
 	});
 };

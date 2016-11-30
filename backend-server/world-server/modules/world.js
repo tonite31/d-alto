@@ -27,8 +27,8 @@ module.exports = (function()
 				var map = new Map({
 					name : 'test',
 					size : {
-						width: 10000,
-						height: 10000
+						width: 1000,
+						height: 1000
 					},
 					zoneSize : {
 						width: 500,
@@ -64,8 +64,8 @@ module.exports = (function()
 		{
 			try
 			{
-				var testObjectCount = 1000;
-				var testNpcCount = 1000;
+				var testObjectCount = 10;
+				var testNpcCount = 10;
 				var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
 				var npcSpeed = {min : 10, max : 50};
 				
@@ -292,9 +292,27 @@ module.exports = (function()
 			this.setObjectZone(maps[target.location.mapName], target);
 		};
 		
-		this.deleteObject = function()
+		this.deleteObject = function(id)
 		{
 			//메모리에서 오브젝트를 삭제.
+			delete users[id];
+			for(var key in maps)
+			{
+				var objects = maps[key].objects;
+				for(var i=0; i<objects.length; i++)
+				{
+					if(objects[i]._id == id)
+					{
+						delete objects.splice(i, 1);
+						break;
+					}
+				}
+				
+				for(var zoneId in maps[key].zone)
+				{
+					delete maps[key].zone[zoneId][id];
+				}
+			}
 		};
 		
 	}).call(world);
