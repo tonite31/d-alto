@@ -7,6 +7,7 @@ var Map = require('../schema/mapSchema');
 
 module.exports = function(app, io)
 {
+	var timer = {};
 	world.createMaps(function()
 	{
 		console.log("맵 생성 완료");
@@ -43,7 +44,15 @@ module.exports = function(app, io)
 			if(!client.request.session.characterId)
 				return;
 			
+			clearTimeout(timer[client.request.session.characterId]);
+			delete timer[client.request.session.characterId];
+			
 			var character = world.getUserCharacter(client.request.session.characterId);
+			if(!character)
+			{
+				//disconnect가 오래되서 끊긴것.
+				return;
+			}
 			
 			//접속한 사람은 맵을 한 번 그려야 하므로.
 			//그런데 성능상 클라이언트 화면에 보여지는것만 줄거야.
@@ -87,9 +96,14 @@ module.exports = function(app, io)
 //				client.emit('MOVE_CHARACTER', {character : character, direction : direction});
 			});
 			
+			client.on('CHAT_MESSAGE', function(message)
+			{
+				io.emit('CHAT_MESSAGE', message);
+			});
+			
 			client.on('disconnect', function()
 			{
-				setTimeout(function()
+				timer[client.request.session.characterId] = setTimeout(function()
 				{
 					world.deleteObject(client.request.session.characterId);
 				},10 * 1000);

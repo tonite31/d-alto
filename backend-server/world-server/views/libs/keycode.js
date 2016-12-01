@@ -7,6 +7,7 @@ var _KeyCode = {};
 	this['87'] = 'up';
 	this['83'] = 'down';
 	this['49'] = '1';
+	this['13'] = 'enter';
 	
 	this.isMoving = function(e)
 	{

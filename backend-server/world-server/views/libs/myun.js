@@ -1,3 +1,5 @@
+var server_socket = io.connect();
+
 var myun = {}; 
 
 var mapId = '#map';
@@ -23,9 +25,10 @@ var canvasMapId = '#canvas';
 	var keyHolded = false;
 	var keyHoldInterval = null;
 	
+	var chatting = false;
+	
 	//접속하면 소켓이 생성된다.
-	var socket = io.connect();
-	socket.on('CONNECTED', function(data)
+	server_socket.on('CONNECTED', function(data)
 	{
 		this.loadImages(function()
 		{
@@ -49,8 +52,8 @@ var canvasMapId = '#canvas';
 						};
 						
 						if(keyHolded)
-							socket.emit('MOVE_CHARACTER', keyHolded);
-						socket.emit('UPDATE_OBJECTS', {screenPosition : sp});
+							server_socket.emit('MOVE_CHARACTER', keyHolded);
+						server_socket.emit('UPDATE_OBJECTS', {screenPosition : sp});
 					}, 1000/FPS);
 					
 					$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
@@ -73,7 +76,7 @@ var canvasMapId = '#canvas';
 			
 			//어쨋든 캐릭터의 이동에 따라서 보이지 않게 되는 element들도 있을것이다.
 			//그런 애들은 어떻게 처리 할지...	
-			socket.on('UPDATE_OBJECTS', function(objects)
+			server_socket.on('UPDATE_OBJECTS', function(objects)
 			{
 				try
 				{
@@ -152,6 +155,11 @@ var canvasMapId = '#canvas';
 				}
 				
 			}.bind(this));
+			
+			server_socket.on('CHAT_MESSAGE', function(message)
+			{
+				$('#chatList').append('<p>' + message + '</p>');
+			});
 		});
 	}.bind(this));
 	
@@ -259,17 +267,23 @@ var canvasMapId = '#canvas';
 	{
 		$(window).on('keydown', function(e)
 		{
-			var direction = _KeyCode.isMoving(e);
-			
-			if(direction)
+			if(!chatting)
 			{
-				keyHolded = direction;
-			}
-			else
-			{
-				if(_KeyCode[e.keyCode + ''] == '1')
+				var direction = _KeyCode.isMoving(e);
+				
+				if(direction)
 				{
-					//스킬
+					keyHolded = direction;
+				}
+				else
+				{
+					switch(_KeyCode[e.keyCode])
+					{
+						case 'enter':
+							$('#chatInput').focus();
+							chatting = true;
+							break;
+					}
 				}
 			}
 		});
@@ -280,6 +294,27 @@ var canvasMapId = '#canvas';
 			{
 				keyHolded = null;
 			}
+		});
+		
+		$('#chatInput').on('keydown', function(e)
+		{
+			if(e.keyCode == 13)
+			{
+				//send
+				server_socket.emit('CHAT_MESSAGE', $(this).val());
+				
+				$(this).val('').blur();
+				
+				chatting = false;
+				
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		});
+		
+		$('#chatInput').on('focus', function()
+		{
+			chatting = true;
 		});
 	};
 })();

@@ -27,8 +27,8 @@ module.exports = (function()
 				var map = new Map({
 					name : 'test',
 					size : {
-						width: 1000,
-						height: 1000
+						width: 3000,
+						height: 3000
 					},
 					zoneSize : {
 						width: 500,
@@ -64,8 +64,8 @@ module.exports = (function()
 		{
 			try
 			{
-				var testObjectCount = 10;
-				var testNpcCount = 10;
+				var testObjectCount = 100;
+				var testNpcCount = 100;
 				var testNpcImages = ['character/cha_pri_f.gif', 'character/cha_wiz_m.gif', 'character/face00.gif', 'character/face05.gif'];
 				var npcSpeed = {min : 10, max : 50};
 				
