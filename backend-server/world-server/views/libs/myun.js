@@ -20,7 +20,6 @@ var canvasMapId = '#canvas';
 	var mapScrollData = {left: 0, top: 0};
 	var screenSize = {};
 	var screenPosition = {left: 0, right: 0, top: 0, bottom: 0};
-	var drawedObjectList = {};
 	
 	var keyHolded = false;
 	var keyHoldInterval = null;
@@ -81,7 +80,6 @@ var canvasMapId = '#canvas';
 				try
 				{
 					var maxY = 0;
-					var list = {};
 					for(var i=0; i<objects.length; i++)
 					{
 						var zone = objects[i];
@@ -97,55 +95,60 @@ var canvasMapId = '#canvas';
 							if(maxY < y)
 								maxY = y;
 							
-							//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
 							var element = $('#' + object._id);
-							
-							if(element.length <= 0)
+							//현재 시야에서 보이면
+							if(x + props.size.width * 2 + mapScrollData.left >= 0 && y + props.size.height * 2 + mapScrollData.top >= 0 && x - props.size.width + mapScrollData.left <= screenSize.width && y - props.size.height + mapScrollData.top <= screenSize.height)
 							{
-								var template = '<div class="object"><div class="object-image"></div></div>';
-								template = $(template);
-								template.attr('id', object._id)
-								.css('width', props.collisionSize.width + 'px')
-								.css('height', props.collisionSize.height + 'px')
-								.css('zIndex', y)
-								.children('div')
-								.css('background-image', 'url(/views/images/' + props.image + ')')
-								.css('width', props.size.width + 'px')
-								.css('height', props.size.height + 'px');
-								
-								if(props.movable)
-									template.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)');
+								//만약 이미 그려진 오브젝트중에 없으면 element를 생성한다.
+								if(element.length <= 0)
+								{
+									var template = '<div class="object"></span><div class="object-image"><span class="object-name"></div></div>';
+									template = $(template);
+									template.attr('id', object._id)
+									.css('width', props.collisionSize.width + 'px')
+									.css('height', props.collisionSize.height + 'px')
+									.css('zIndex', y)
+									.children('div')
+									.css('background-image', 'url(/views/images/' + props.image + ')')
+									.css('width', props.size.width + 'px')
+									.css('height', props.size.height + 'px')
+									.children('span').text(object.name);
+									
+									if(props.movable)
+										template.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)');
+									else
+										template.css('left', x + 'px').css('top', y + 'px');
+									
+									$(mapId).append(template);
+
+									var spanWidth = new Number(template.find('span').css('width').replace('px', ''));
+									var spanHeight = new Number(template.find('span').css('height').replace('px', ''));
+									template.find('span').css('left', props.size.width/2 - spanWidth/2);
+									template.find('span').css('top', - spanHeight - 3 + 'px');
+								}
 								else
-									template.css('left', x + 'px').css('top', y + 'px');
-								
-								$(mapId).append(template);
+								{
+									if(myCharacter._id == object._id)
+									{
+										this.scrollScreen(object);
+									}
+									
+									//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
+									if(props.movable && (location.prevPosition.x != x || location.prevPosition.y != y))
+									{
+										element.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)').css('zIndex', y);
+									}
+								}
 							}
-							else
+							else if(element.length > 0)
 							{
-								if(myCharacter._id == object._id)
-									this.scrollScreen(object);
-								
-								//만약 이미 그려진 오브젝트중에 있으면 그냥 좌표만 바꿔준다.
-								if(props.movable)
-									element.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)').css('zIndex', y);
-								else
-									element.css('left', x + 'px').css('top', y + 'px').css('zIndex', y);
+								//안보이면
+								element.remove();
 							}
-							
-							//그린건 지워버린다.
-							list[object._id] = object;
-							delete drawedObjectList[object._id];
 						}
 					}
 					
-					//그리지 못하고 남아있는건 element를 지운다. 그럼 시야에서 사라진(파괴된) 오브젝트들이 모두 없어진다. hide는 나중에 생각.
-					for(var key in drawedObjectList)
-					{
-						$('#' + drawedObjectList[key]._id).remove();
-					}
-					
-					//그리고 새로운 리스트로 대체한다.
-					drawedObjectList = list;
+					//시야에서 사라진 오브젝트를 전부 삭제하자.
 					
 					$(canvasMapId).css('zIndex', maxY);
 				}
@@ -159,6 +162,7 @@ var canvasMapId = '#canvas';
 			server_socket.on('CHAT_MESSAGE', function(message)
 			{
 				$('#chatList').append('<p>' + message + '</p>');
+				$('#chatList').get(0).scrollTop = $('#chatList').get(0).scrollHeight;
 			});
 		});
 	}.bind(this));
@@ -308,6 +312,11 @@ var canvasMapId = '#canvas';
 			{
 				keyHolded = null;
 			}
+		});
+		
+		$(window).on('blur', function(e)
+		{
+			keyHolded = null;
 		});
 		
 		$('#chatInput').on('keydown', function(e)
