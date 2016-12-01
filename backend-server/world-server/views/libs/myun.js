@@ -283,6 +283,20 @@ var canvasMapId = '#canvas';
 							$('#chatInput').focus();
 							chatting = true;
 							break;
+						case '1':
+							var fireball = '<div class="fireball"><div></div></div>';
+							fireball = $(fireball);
+							
+							fireball.css('transform', 'translate3d(' + myCharacter.location.position.x + 'px, ' + myCharacter.location.position.y + 'px, 0)');
+							
+							fireball.on('transitionend', function(){
+								$(this).remove();
+							});
+							$(mapId).append(fireball);
+							setTimeout(function(){
+								$(fireball).css('transform', 'translate3d(600px, 100px, 0px)');
+							}, 100);
+							break;
 					}
 				}
 			}
