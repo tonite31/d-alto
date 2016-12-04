@@ -16,6 +16,7 @@ module.exports = function(app, io)
 		//새 유저가 접속하면 캐릭터를 만들어준다.
 		app.get('/', function(req, res, next)
 		{
+			console.log("머지 : ", req.session);
 			if(!req.session.characterId)
 			{
 				var character = world.createUserCharacter('test');
@@ -50,6 +51,7 @@ module.exports = function(app, io)
 			var character = world.getUserCharacter(client.request.session.characterId);
 			if(!character)
 			{
+				console.log("메모리의 캐릭터가 삭제되었다");
 				//disconnect가 오래되서 끊긴것.
 				return;
 			}

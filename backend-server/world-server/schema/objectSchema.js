@@ -25,7 +25,10 @@ var Object = new Schema({
 		}
 	},
 	stat: {
-		moveSpeed : Number
+		moveSpeed : Number,
+		attackSpeed : Number, //기본 공격이 1초인데. 이게 %다. 50이면 %. 즉 0.5초가 된다. 최대 상한은 70%이다.
+		
+		maxAttackSpeed : {type: Number, default: 70}
 	}
 });
  

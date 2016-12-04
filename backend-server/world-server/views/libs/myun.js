@@ -115,7 +115,7 @@ var canvasMapId = '#canvas';
 									.children('span').text(object.name);
 									
 									if(props.movable)
-										template.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)');
+										template.css('transform', 'translate3d(' + x + 'px, ' + y + 'px, 0px)').attr('data-movable', true);
 									else
 										template.css('left', x + 'px').css('top', y + 'px');
 									
@@ -130,6 +130,7 @@ var canvasMapId = '#canvas';
 								{
 									if(myCharacter._id == object._id)
 									{
+										element.css('cursor', 'default');
 										this.scrollScreen(object);
 									}
 									
@@ -260,7 +261,7 @@ var canvasMapId = '#canvas';
 		}
 
 		//맵의 한계라서 스크롤을 할 수 없는 경우도 있으니 체크.
-		myCharacter = object;
+		myCharacter.location = object.location;
 		
 		$(mapId).css('transform', 'translate3d(' + mapScrollData.left + 'px, ' + mapScrollData.top + 'px, 0px)');
 		
@@ -305,39 +306,71 @@ var canvasMapId = '#canvas';
 				}
 			}
 		});
-		
-		$(window).on('keyup', function(e)
-		{
-			if(_KeyCode.isMoving(e) == keyHolded)
-			{
-				keyHolded = null;
-			}
-		});
-		
-		$(window).on('blur', function(e)
+	};
+	
+	$(window).on('keyup', function(e)
+	{
+		if(_KeyCode.isMoving(e) == keyHolded)
 		{
 			keyHolded = null;
-		});
+		}
+	});
+	
+	$(window).on('blur', function(e)
+	{
+		keyHolded = null;
+	});
+	
+	$(window).on('mousedown', function(e)
+	{
+		console.log("마우스 다운");
+		//서버로 공격을 보낸다.
+		//공격속도만큼 setInterval로 계속 보낸다.
+		//서버에서는 체크해서 공격이 가능하면 공격 로직을 수행한다.
 		
-		$('#chatInput').on('keydown', function(e)
-		{
-			if(e.keyCode == 13)
-			{
-				//send
-				server_socket.emit('CHAT_MESSAGE', $(this).val());
-				
-				$(this).val('').blur();
-				
-				chatting = false;
-				
-				e.preventDefault();
-				e.stopPropagation();
-			}
-		});
+		//공격 쿨타임이 돌지 않았는데 다시 누르면 반응이 없어야 한다.
 		
-		$('#chatInput').on('focus', function()
+		myCharacter.attackTimer = setInterval(function()
 		{
-			chatting = true;
-		});
-	};
+		}, 1000 * myCharacter.stat.attackSpeed);
+		
+		console.log("공격속도 : ", 1000 * myCharacter.stat.attackSpeed);
+	});
+	
+	$(window).on('mouseup', function(e)
+	{
+		//interval을 종료한다.
+		if(myCharacter.attackTimer)
+		{
+			clearInterval(myCharacter.attackTimer);
+			myCharacter.attackTimer = null;
+		}
+	});
+	
+	$(mapId).on('dblclick', function(e)
+	{
+		e.preventDefault();
+		e.stopPropagation();
+	});
+	
+	$('#chatInput').on('keydown', function(e)
+	{
+		if(e.keyCode == 13)
+		{
+			//send
+			server_socket.emit('CHAT_MESSAGE', $(this).val());
+			
+			$(this).val('').blur();
+			
+			chatting = false;
+			
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	});
+	
+	$('#chatInput').on('focus', function()
+	{
+		chatting = true;
+	});
 })();

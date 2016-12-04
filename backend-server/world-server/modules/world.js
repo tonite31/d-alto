@@ -213,6 +213,8 @@ module.exports = (function()
 				props.collision = true;
 				
 				object.stat.moveSpeed = 5;
+				object.stat.attackSpeed = 1;
+				object.stat.maxAttackSpeed = 70;
 				
 				var location = object.location;
 				
