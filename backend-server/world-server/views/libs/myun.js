@@ -58,7 +58,7 @@ var canvasMapId = '#canvas';
 					$(mapId).css('width', map.size.width + 'px').css('height', map.size.height + 'px');
 					$(canvasMapId).attr('width', screenSize.width).attr('height', screenSize.height);
 
-					this.bindKeyboardAction();
+//					this.bindKeyboardAction();
 				}
 				catch(err)
 				{
@@ -268,45 +268,45 @@ var canvasMapId = '#canvas';
 		return true;
 	};
 	
-	this.bindKeyboardAction = function()
-	{
-		$(window).on('keydown', function(e)
-		{
-			if(!chatting)
-			{
-				var direction = _KeyCode.isMoving(e);
-				
-				if(direction)
-				{
-					keyHolded = direction;
-				}
-				else
-				{
-					switch(_KeyCode[e.keyCode])
-					{
-						case 'enter':
-							$('#chatInput').focus();
-							chatting = true;
-							break;
-						case '1':
-							var fireball = '<div class="fireball"><div></div></div>';
-							fireball = $(fireball);
-							
-							fireball.css('transform', 'translate3d(' + myCharacter.location.position.x + 'px, ' + myCharacter.location.position.y + 'px, 0)');
-							
-							fireball.on('transitionend', function(){
-								$(this).remove();
-							});
-							$(mapId).append(fireball);
-							setTimeout(function(){
-								$(fireball).css('transform', 'translate3d(600px, 100px, 0px)');
-							}, 100);
-							break;
-					}
-				}
-			}
-		});
-	};
+//	this.bindKeyboardAction = function()
+//	{
+//		$(window).on('keydown', function(e)
+//		{
+//			if(!chatting)
+//			{
+//				var direction = _KeyCode.isMoving(e);
+//				
+//				if(direction)
+//				{
+//					keyHolded = direction;
+//				}
+//				else
+//				{
+//					switch(_KeyCode[e.keyCode])
+//					{
+//						case 'enter':
+//							$('#chatInput').focus();
+//							chatting = true;
+//							break;
+//						case '1':
+//							var fireball = '<div class="fireball"><div></div></div>';
+//							fireball = $(fireball);
+//							
+//							fireball.css('transform', 'translate3d(' + myCharacter.location.position.x + 'px, ' + myCharacter.location.position.y + 'px, 0)');
+//							
+//							fireball.on('transitionend', function(){
+//								$(this).remove();
+//							});
+//							$(mapId).append(fireball);
+//							setTimeout(function(){
+//								$(fireball).css('transform', 'translate3d(600px, 100px, 0px)');
+//							}, 100);
+//							break;
+//					}
+//				}
+//			}
+//		});
+//	};
 	
 	$(window).on('keyup', function(e)
 	{
@@ -321,31 +321,56 @@ var canvasMapId = '#canvas';
 		keyHolded = null;
 	});
 	
-	$(window).on('mousedown', function(e)
+	$(window).on('mousemove', function(e)
 	{
-		console.log("마우스 다운");
-		//서버로 공격을 보낸다.
-		//공격속도만큼 setInterval로 계속 보낸다.
-		//서버에서는 체크해서 공격이 가능하면 공격 로직을 수행한다.
-		
-		//공격 쿨타임이 돌지 않았는데 다시 누르면 반응이 없어야 한다.
-		
-		myCharacter.attackTimer = setInterval(function()
+		if(e.buttons == 1)
 		{
-		}, 1000 * myCharacter.stat.attackSpeed);
-		
-		console.log("공격속도 : ", 1000 * myCharacter.stat.attackSpeed);
-	});
-	
-	$(window).on('mouseup', function(e)
-	{
-		//interval을 종료한다.
-		if(myCharacter.attackTimer)
+			//타겟이 오브젝트면 오브젝트의 x, y값을, 맵이면 clientX로 screen좌표로 바꾼다음.
+			// 화면에 X를 기준으로 상하좌우 이동을 결정한다.
+			// x값의 차이보다 y값의 차이가 더 크다면 상하, 반대면 좌우. -값이면 좌 뭐 이런식으로 판단하면 될듯.
+			
+			//무빙 이후 기본공격도 여기다 매핑하면 될듯.
+		}
+		else if(e.buttons == 0)
 		{
-			clearInterval(myCharacter.attackTimer);
-			myCharacter.attackTimer = null;
+			//무빙 멈춤.
 		}
 	});
+	
+//	$(window).on('mousedown', function(e)
+//	{
+//		console.log("타겟 : ", e.target);
+//		if(_Skill.attack(myCharacter, e.target))
+//		{
+//			//공격이 성공해야 이후 공격이 자동으로 진행된다.
+//			myCharacter.clickTimer = setInterval(function()
+//			{
+//				if(!_Skill.attack(myCharacter, e.target))
+//				{
+//					//공격이 실패하면 바로 종료.
+//					clearInterval(myCharacter.clickTimer);
+//					myCharacter.clickTimer = null;
+//				}
+//			}, 1000 * myCharacter.stat.attackSpeed);
+//		}
+//		else
+//		{
+//			//공격이 아니면 무조건 무빙이다.
+//			//타겟이 오브젝트면 오브젝트의 x, y값을, 맵이면 clientX로 screen좌표로 바꾼다음.
+//			// 화면에 X를 기준으로 상하좌우 이동을 결정한다.
+//			// x값의 차이보다 y값의 차이가 더 크다면 상하, 반대면 좌우. -값이면 좌 뭐 이런식으로 판단하면 될듯.
+//		}
+//	});
+//
+//	$(window).on('mouseup', function(e)
+//	{
+//		//interval을 종료한다. 공격 or 무빙
+//		if(myCharacter.clickTimer)
+//		{
+//			clearInterval(myCharacter.clickTimer);
+//			myCharacter.clickTimer = null;
+//		}
+//	});
 	
 	$(mapId).on('dblclick', function(e)
 	{
