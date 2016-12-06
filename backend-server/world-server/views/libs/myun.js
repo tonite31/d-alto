@@ -325,6 +325,18 @@ var canvasMapId = '#canvas';
 	{
 		if(e.buttons == 1)
 		{
+			var x = null;
+			var y = null;
+			
+			if(e.target.className.indexOf('object') != -1)
+			{
+				console.log("오브젝트");
+			}
+			else if(e.target.className.indexOf('map') != -1)
+			{
+				console.log("맵");
+			}
+				
 			//타겟이 오브젝트면 오브젝트의 x, y값을, 맵이면 clientX로 screen좌표로 바꾼다음.
 			// 화면에 X를 기준으로 상하좌우 이동을 결정한다.
 			// x값의 차이보다 y값의 차이가 더 크다면 상하, 반대면 좌우. -값이면 좌 뭐 이런식으로 판단하면 될듯.
