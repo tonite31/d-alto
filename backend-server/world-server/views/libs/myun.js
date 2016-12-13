@@ -330,12 +330,24 @@ var canvasMapId = '#canvas';
 			
 			if(e.target.className.indexOf('object') != -1)
 			{
-				console.log("오브젝트");
+				x = $(e.target.parentElement).css('left').replace('px', '');
+				y = $(e.target.parentElement).css('top').replace('px', '');
+				
+				if(x != null && y != null)
+				{
+					
+				}
+//				x = e.target.parentElement.style.x;
+//				y = e.target.parentElement.style.y;
 			}
 			else if(e.target.className.indexOf('map') != -1)
 			{
-				console.log("맵");
+				x = e.clientX + mapScrollData.left;
+				y = e.clientY + mapScrollData.top;
 			}
+			
+			
+			console.log(x, y);
 				
 			//타겟이 오브젝트면 오브젝트의 x, y값을, 맵이면 clientX로 screen좌표로 바꾼다음.
 			// 화면에 X를 기준으로 상하좌우 이동을 결정한다.
